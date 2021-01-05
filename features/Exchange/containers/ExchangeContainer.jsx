@@ -1,16 +1,31 @@
 import React, {useEffect, useState} from 'react'
+import get from 'lodash/fp/get'
 
-const ExchangeContainer = ({ connections, name }) => {
-  const [balances, setBalances] = useState({})
+import DataPresenter from '../../../components/DataPresenter'
+import Balances from '../components/Balances'
+
+const ExchangeContainer = ({ connection, name }) => {
+  const [balances, setBalances] = useState()
+  const [ltcPair, setLtcPair] = useState()
+  const [dashPair, setDashPair] = useState()
+
+  const pairs = {
+    LTC: get('data')(ltcPair),
+    DASH: get('data')(dashPair),
+  }
 
   useEffect(() => {
-    connections.getBalances().then(res => setBalances(res))
+    connection.getBalances().then(res => setBalances(res))
+    connection.getCurrencyPair('LTC_CZK').then(res => setLtcPair(res))
+    connection.getCurrencyPair('DASH_CZK').then(res => setDashPair(res))
   }, [])
 
   return (
     <div>
       <h2>{name} Exchange</h2>
-      <pre>{JSON.stringify(balances, null, 2)}</pre>
+      <DataPresenter data={balances} transformData={get('data')}>
+        {balances => <Balances balances={balances} pairs={pairs}/> }
+      </DataPresenter>
     </div>
   )
 }

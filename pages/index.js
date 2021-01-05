@@ -17,7 +17,7 @@ export default function Home({ coinmateConnectionInfo }) {
       <main className={styles.main}>
         <ExchangeContainer
           name={'CoinMate'}
-          connections={new CoinMate(publicKey, privateKey, clientId)}
+          connection={new CoinMate(publicKey, privateKey, clientId)}
         />
       </main>
 
