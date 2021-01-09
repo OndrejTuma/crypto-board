@@ -1,30 +1,49 @@
-import React, {useEffect, useState} from 'react'
-import get from 'lodash/fp/get'
+import React, { useEffect, useState } from 'react'
 
 import DataPresenter from '../../../components/DataPresenter'
 import Balances from '../components/Balances'
 
-const ExchangeContainer = ({ connection, name }) => {
-  const [balances, setBalances] = useState()
-  const [ltcPair, setLtcPair] = useState()
-  const [dashPair, setDashPair] = useState()
+const getTotal = (balances, pairs) => balances.reduce((acc, {balance, currency}) => {
+  const pair = pairs.find(({pair}) => pair[0] === currency)
 
-  const pairs = {
-    LTC: get('data')(ltcPair),
-    DASH: get('data')(dashPair),
+  if (!pair) {
+    return acc + balance
   }
 
+  return acc + balance * pair.bid
+}, 0)
+
+const ExchangeContainer = ({ connection, currencies, mainCurrency, name }) => {
+  const [balances, setBalances] = useState()
+  const [pairs, setPairs] = useState()
+  const [total, setTotal] = useState(0)
+
   useEffect(() => {
-    connection.getBalances().then(res => setBalances(res))
-    connection.getCurrencyPair('LTC_CZK').then(res => setLtcPair(res))
-    connection.getCurrencyPair('DASH_CZK').then(res => setDashPair(res))
+    connection.getBalances(currencies).then(res => setBalances(res))
+    connection.getCurrencyPairs(currencies.filter(currency => currency !== mainCurrency), mainCurrency).then(res => setPairs(res))
+
+    connection.createWebSocket([])
   }, [])
+  useEffect(() => {
+    if (!balances || !pairs) {
+      return
+    }
+
+    setTotal(getTotal(balances, pairs))
+  }, [balances, pairs])
 
   return (
     <div>
       <h2>{name} Exchange</h2>
-      <DataPresenter data={balances} transformData={get('data')}>
-        {balances => <Balances balances={balances} pairs={pairs}/> }
+      <DataPresenter data={balances}>
+        {balances => (
+          <Balances
+            balances={balances}
+            pairs={pairs}
+            total={total}
+            mainCurrency={mainCurrency}
+          />
+        )}
       </DataPresenter>
     </div>
   )

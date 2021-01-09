@@ -16,8 +16,10 @@ export default function Home({ coinmateConnectionInfo }) {
 
       <main className={styles.main}>
         <ExchangeContainer
-          name={'CoinMate'}
           connection={new CoinMate(publicKey, privateKey, clientId)}
+          currencies={['CZK', 'BTC', 'LTC', 'DASH']}
+          mainCurrency={'CZK'}
+          name={'CoinMate'}
         />
       </main>
 
