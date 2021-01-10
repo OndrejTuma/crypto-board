@@ -35,11 +35,11 @@ CoinMate.prototype._subscribeToChannel = function (channel) {
 }
 
 
-CoinMate.prototype.createWebSocket = function (channels = []) {
+CoinMate.prototype.createWebSocket = function (currencies, mainCurrency) {
   this.socket = new WebSocket(this.websocketUrl)
 
   this.socket.addEventListener('open', () => {
-    channels.forEach(channel => this._subscribeToChannel(channel))
+    currencies.forEach(currency => this._subscribeToChannel(`order_book-${currency}_${mainCurrency}`))
   })
   this.socket.addEventListener('message', function (event) {
     console.log('Message from server ', JSON.parse(event.data))

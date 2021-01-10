@@ -20,9 +20,9 @@ const ExchangeContainer = ({ connection, currencies, mainCurrency, name }) => {
 
   useEffect(() => {
     connection.getBalances(currencies).then(res => setBalances(res))
-    connection.getCurrencyPairs(currencies.filter(currency => currency !== mainCurrency), mainCurrency).then(res => setPairs(res))
+    connection.getCurrencyPairs(currencies, mainCurrency).then(res => setPairs(res))
 
-    connection.createWebSocket([])
+    connection.createWebSocket(currencies, mainCurrency)
   }, [])
   useEffect(() => {
     if (!balances || !pairs) {
