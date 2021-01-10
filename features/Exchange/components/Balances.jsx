@@ -5,10 +5,13 @@ import CardHeader from '@material-ui/core/CardHeader'
 import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
 import Divider from '@material-ui/core/Divider'
+import Skeleton from '@material-ui/lab/Skeleton'
 
-const Balances = ({ balances, currencyPairs, formatNumber, total }) => {
+import DataPresenter from '../../../components/DataPresenter'
+
+const Balances = ({ balances, currencyPairs, formatNumber }) => {
   return (
-    <div>
+    <Typography component={'div'} paragraph>
       <Grid container spacing={2}>
         {balances.map(({ currency, balance }) => {
           const currencyPair = currencyPairs && currencyPairs.find(({ pair }) => pair[0] === currency)
@@ -16,29 +19,34 @@ const Balances = ({ balances, currencyPairs, formatNumber, total }) => {
           return (
             <Grid item key={currency}>
               <Card variant={'outlined'}>
-                <CardHeader style={{textAlign: 'center'}} title={currency}/>
+                <CardHeader
+                  title={currency}
+                  subheader={balance}
+                />
                 <Divider/>
                 <CardContent>
-                  <Typography paragraph>amount: {balance}</Typography>
-                  {currencyPair && (
-                    <Typography>price: {formatNumber(currencyPair.bid)}</Typography>
-                  )}
+                  <DataPresenter data={currencyPair} loader={<Skeleton variant={'text'} animation={'wave'}/>}>
+                    {currencyPair => (
+                      <Typography align={'center'}>{formatNumber(currencyPair.bid)}</Typography>
+                    )}
+                  </DataPresenter>
                 </CardContent>
-                {currencyPair && (
-                  <>
-                    <Divider/>
-                    <Typography paragraph style={{textAlign: 'center', marginTop: 16}}>
-                      {formatNumber(balance * currencyPair.bid)}
-                    </Typography>
-                  </>
-                )}
+                <Divider />
+                <CardContent>
+                  <DataPresenter data={currencyPair} loader={<Skeleton variant={'text'} animation={'wave'}/>}>
+                    {currencyPair => (
+                      <Typography align={'center'}>
+                        <strong>{formatNumber(balance * currencyPair.bid)}</strong>
+                      </Typography>
+                    )}
+                  </DataPresenter>
+                </CardContent>
               </Card>
             </Grid>
           )
         })}
       </Grid>
-      <Typography variant={'h4'}>Total: {formatNumber(total)}</Typography>
-    </div>
+    </Typography>
   )
 }
 

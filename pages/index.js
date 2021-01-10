@@ -17,7 +17,7 @@ export default function Home({ coinmateConnectionInfo }) {
       <main className={styles.main}>
         <ExchangeContainer
           connection={new CoinMate(publicKey, privateKey, clientId)}
-          currencies={['CZK', 'BTC', 'LTC', 'DASH']}
+          currencies={['BTC', 'LTC', 'DASH', 'ETH']}
           country={{
             currency: 'CZK',
             ISO: 'cs-CZ',
@@ -27,7 +27,7 @@ export default function Home({ coinmateConnectionInfo }) {
       </main>
 
       <footer className={styles.footer}>
-        CoinMate
+        Exchange aggregator
       </footer>
     </div>
   )
