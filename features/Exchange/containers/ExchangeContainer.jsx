@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react'
 import DataPresenter from '../../../components/DataPresenter'
 import Balances from '../components/Balances'
 
-const getTotal = (balances, pairs) => balances.reduce((acc, {balance, currency}) => {
-  const pair = pairs.find(({pair}) => pair[0] === currency)
+const getTotal = (balances, pairs) => balances.reduce((acc, { balance, currency }) => {
+  const pair = pairs.find(({ pair }) => pair[0] === currency)
 
   if (!pair) {
     return acc + balance
@@ -15,22 +15,33 @@ const getTotal = (balances, pairs) => balances.reduce((acc, {balance, currency})
 
 const ExchangeContainer = ({ connection, currencies, mainCurrency, name }) => {
   const [balances, setBalances] = useState()
-  const [pairs, setPairs] = useState()
+  const [currencyPairs, setCurrencyPairs] = useState([])
   const [total, setTotal] = useState(0)
 
   useEffect(() => {
     connection.getBalances(currencies).then(res => setBalances(res))
-    connection.getCurrencyPairs(currencies, mainCurrency).then(res => setPairs(res))
 
-    connection.createWebSocket(currencies, mainCurrency)
+    connection.createSocketForCurrencyPairs(currencies, mainCurrency)
+    connection.subscribeToCurrencyPairs(currencyPair => {
+      setCurrencyPairs(currencyPairs => {
+        if (currencyPairs.find(({ pair }) => pair[0] === currencyPair.pair[0])) {
+          return currencyPairs.map(stateCurrencyPair => stateCurrencyPair.pair[0] === currencyPair.pair[0] ? currencyPair : stateCurrencyPair)
+        } else {
+          return [
+            ...currencyPairs,
+            currencyPair,
+          ]
+        }
+      })
+    })
   }, [])
   useEffect(() => {
-    if (!balances || !pairs) {
+    if (!balances || !currencyPairs) {
       return
     }
 
-    setTotal(getTotal(balances, pairs))
-  }, [balances, pairs])
+    setTotal(getTotal(balances, currencyPairs))
+  }, [balances, currencyPairs])
 
   return (
     <div>
@@ -39,7 +50,7 @@ const ExchangeContainer = ({ connection, currencies, mainCurrency, name }) => {
         {balances => (
           <Balances
             balances={balances}
-            pairs={pairs}
+            currencyPairs={currencyPairs}
             total={total}
             mainCurrency={mainCurrency}
           />

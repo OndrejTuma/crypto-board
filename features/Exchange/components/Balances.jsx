@@ -2,18 +2,17 @@ import React from 'react'
 import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import CardHeader from '@material-ui/core/CardHeader'
-import CardActions from '@material-ui/core/CardActions'
 import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
 import Divider from '@material-ui/core/Divider'
 import CurrencyPairExchange from './CurrencyPairExchange'
 
-const Balances = ({ balances, mainCurrency, pairs, total }) => {
+const Balances = ({ balances, mainCurrency, currencyPairs, total }) => {
   return (
     <div>
       <Grid container spacing={2}>
         {balances.map(({ currency, balance }) => {
-          const pair = pairs && pairs.find(({ pair }) => pair[0] === currency)
+          const currencyPair = currencyPairs && currencyPairs.find(({ pair }) => pair[0] === currency)
 
           return (
             <Grid item key={currency}>
@@ -22,17 +21,17 @@ const Balances = ({ balances, mainCurrency, pairs, total }) => {
                 <Divider/>
                 <CardContent>
                   <Typography paragraph>amount: {balance}</Typography>
-                  {pair && (
-                    <Typography>price: {pair.bid} {mainCurrency}</Typography>
+                  {currencyPair && (
+                    <Typography>price: {parseFloat(currencyPair.bid).toFixed(2)} {mainCurrency}</Typography>
                   )}
                 </CardContent>
-                {pair && (
+                {currencyPair && (
                   <>
                     <Divider/>
                     <Typography paragraph style={{textAlign: 'center', marginTop: 16}}>
                       <CurrencyPairExchange
                         balance={balance}
-                        pair={pair}
+                        pair={currencyPair}
                       />
                     </Typography>
                   </>
@@ -42,7 +41,7 @@ const Balances = ({ balances, mainCurrency, pairs, total }) => {
           )
         })}
       </Grid>
-      <Typography variant={'h4'}>Total: {Math.floor(total)} {mainCurrency}</Typography>
+      <Typography variant={'h4'}>Total: {parseFloat(total).toFixed(2)} {mainCurrency}</Typography>
     </div>
   )
 }

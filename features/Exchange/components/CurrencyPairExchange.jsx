@@ -7,7 +7,7 @@ const CurrencyPairExchange = ({ balance, pair }) => {
 
   const { pair: currencies, bid } = pair
 
-  return `${Math.floor(balance * bid)} ${currencies[1]}`
+  return `${parseFloat((balance * bid).toString()).toFixed(2)} ${currencies[1]}`
 }
 
 export default CurrencyPairExchange

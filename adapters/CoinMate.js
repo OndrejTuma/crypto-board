@@ -1,5 +1,6 @@
 import HmacSHA256 from 'crypto-js/hmac-sha256'
 import Hex from 'crypto-js/enc-hex'
+import getOr from 'lodash/fp/getOr'
 
 import fetchRequest from '../utils/fetchRequest'
 
@@ -35,18 +36,48 @@ CoinMate.prototype._subscribeToChannel = function (channel) {
 }
 
 
-CoinMate.prototype.createWebSocket = function (currencies, mainCurrency) {
+CoinMate.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
   this.socket = new WebSocket(this.websocketUrl)
 
   this.socket.addEventListener('open', () => {
     currencies.forEach(currency => this._subscribeToChannel(`order_book-${currency}_${mainCurrency}`))
   })
-  this.socket.addEventListener('message', function (event) {
-    console.log('Message from server ', JSON.parse(event.data))
-  })
 
   return this.socket
 }
+CoinMate.prototype.subscribeToCurrencyPairs = function (pairMessage) {
+  if (typeof pairMessage !== 'function') {
+    return
+  }
+
+  this.socket.addEventListener('message', function (e) {
+    const { channel, event, payload } = JSON.parse(e.data)
+
+    if (event !== 'data') {
+      return
+    }
+
+    const [type, currencyPair] = channel.split('-')
+
+    if (type !== 'order_book') {
+      return
+    }
+
+    const bids = getOr([], 'bids')(payload)
+    const asks = getOr([], 'asks')(payload)
+
+    const pair = currencyPair.split('_')
+    const bid = bids.reduce((acc, { price }) => acc + price, 0) / bids.length
+    const ask = asks.reduce((acc, { price }) => acc + price, 0) / asks.length
+
+    pairMessage({
+      ask,
+      bid,
+      pair,
+    })
+  })
+}
+
 CoinMate.prototype.getBalances = async function (currencies) {
   const nonce = this._getNonce()
   const signature = this._getSignature(nonce)
@@ -81,7 +112,7 @@ CoinMate.prototype.getCurrencyPairs = async function (currencies, mainCurrency) 
     if (!pair.error) {
       pairs.push({
         pair: [currency, mainCurrency],
-        ...pair.data
+        ...pair.data,
       })
     }
   }
