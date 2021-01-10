@@ -18,7 +18,10 @@ export default function Home({ coinmateConnectionInfo }) {
         <ExchangeContainer
           connection={new CoinMate(publicKey, privateKey, clientId)}
           currencies={['CZK', 'BTC', 'LTC', 'DASH']}
-          mainCurrency={'CZK'}
+          country={{
+            currency: 'CZK',
+            ISO: 'cs-CZ',
+          }}
           name={'CoinMate'}
         />
       </main>

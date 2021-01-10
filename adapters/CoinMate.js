@@ -67,8 +67,10 @@ CoinMate.prototype.subscribeToCurrencyPairs = function (pairMessage) {
     const asks = getOr([], 'asks')(payload)
 
     const pair = currencyPair.split('_')
-    const bid = bids.reduce((acc, { price }) => acc + price, 0) / bids.length
-    const ask = asks.reduce((acc, { price }) => acc + price, 0) / asks.length
+    // const bid = bids.reduce((acc, { price }) => acc + price, 0) / bids.length
+    // const ask = asks.reduce((acc, { price }) => acc + price, 0) / asks.length
+    const ask = getOr(0, '[0].price')(asks)
+    const bid = getOr(0, '[0].price')(bids)
 
     pairMessage({
       ask,

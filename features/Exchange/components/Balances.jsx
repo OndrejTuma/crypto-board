@@ -5,9 +5,8 @@ import CardHeader from '@material-ui/core/CardHeader'
 import Typography from '@material-ui/core/Typography'
 import Grid from '@material-ui/core/Grid'
 import Divider from '@material-ui/core/Divider'
-import CurrencyPairExchange from './CurrencyPairExchange'
 
-const Balances = ({ balances, mainCurrency, currencyPairs, total }) => {
+const Balances = ({ balances, currencyPairs, formatNumber, total }) => {
   return (
     <div>
       <Grid container spacing={2}>
@@ -22,17 +21,14 @@ const Balances = ({ balances, mainCurrency, currencyPairs, total }) => {
                 <CardContent>
                   <Typography paragraph>amount: {balance}</Typography>
                   {currencyPair && (
-                    <Typography>price: {parseFloat(currencyPair.bid).toFixed(2)} {mainCurrency}</Typography>
+                    <Typography>price: {formatNumber(currencyPair.bid)}</Typography>
                   )}
                 </CardContent>
                 {currencyPair && (
                   <>
                     <Divider/>
                     <Typography paragraph style={{textAlign: 'center', marginTop: 16}}>
-                      <CurrencyPairExchange
-                        balance={balance}
-                        pair={currencyPair}
-                      />
+                      {formatNumber(balance * currencyPair.bid)}
                     </Typography>
                   </>
                 )}
@@ -41,7 +37,7 @@ const Balances = ({ balances, mainCurrency, currencyPairs, total }) => {
           )
         })}
       </Grid>
-      <Typography variant={'h4'}>Total: {parseFloat(total).toFixed(2)} {mainCurrency}</Typography>
+      <Typography variant={'h4'}>Total: {formatNumber(total)}</Typography>
     </div>
   )
 }

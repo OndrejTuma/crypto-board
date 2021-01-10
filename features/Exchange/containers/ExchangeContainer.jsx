@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 
 import DataPresenter from '../../../components/DataPresenter'
 import Balances from '../components/Balances'
+import formatNumberFactory from '../../../utils/formatNumber'
 
 const getTotal = (balances, pairs) => balances.reduce((acc, { balance, currency }) => {
   const pair = pairs.find(({ pair }) => pair[0] === currency)
@@ -13,15 +14,19 @@ const getTotal = (balances, pairs) => balances.reduce((acc, { balance, currency 
   return acc + balance * pair.bid
 }, 0)
 
-const ExchangeContainer = ({ connection, currencies, mainCurrency, name }) => {
+const ExchangeContainer = ({ connection, country, currencies, name }) => {
+  const { currency, ISO } = country
   const [balances, setBalances] = useState()
   const [currencyPairs, setCurrencyPairs] = useState([])
   const [total, setTotal] = useState(0)
 
+  const formatNumber = formatNumberFactory(ISO, currency)
+
   useEffect(() => {
     connection.getBalances(currencies).then(res => setBalances(res))
+    connection.getCurrencyPairs(currencies, currency).then(res => setCurrencyPairs(res))
 
-    connection.createSocketForCurrencyPairs(currencies, mainCurrency)
+    connection.createSocketForCurrencyPairs(currencies, currency)
     connection.subscribeToCurrencyPairs(currencyPair => {
       setCurrencyPairs(currencyPairs => {
         if (currencyPairs.find(({ pair }) => pair[0] === currencyPair.pair[0])) {
@@ -52,7 +57,7 @@ const ExchangeContainer = ({ connection, currencies, mainCurrency, name }) => {
             balances={balances}
             currencyPairs={currencyPairs}
             total={total}
-            mainCurrency={mainCurrency}
+            formatNumber={formatNumber}
           />
         )}
       </DataPresenter>
