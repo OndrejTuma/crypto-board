@@ -3,16 +3,7 @@ import React, { useEffect, useState } from 'react'
 import DataPresenter from '../../../components/DataPresenter'
 import Balances from '../components/Balances'
 import formatNumberFactory from '../../../utils/formatNumber'
-
-const getTotal = (balances, pairs) => balances.reduce((acc, { balance, currency }) => {
-  const pair = pairs.find(({ pair }) => pair[0] === currency)
-
-  if (!pair) {
-    return acc + balance
-  }
-
-  return acc + balance * pair.bid
-}, 0)
+import getTotal from '../../../utils/getTotal'
 
 const ExchangeContainer = ({ connection, country, currencies, name }) => {
   const { currency, ISO } = country
