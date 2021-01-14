@@ -12,7 +12,7 @@ import Typography from '@material-ui/core/Typography'
 const ExchangeContainer = ({ connection, country, currencies, name }) => {
   const { currency, ISO } = country
   const [mainCurrencyBalance, setMainCurrencyBalance] = useState(0)
-  const [balances, setBalances] = useState()
+  const [balances, setBalances] = useState([])
   const [currencyPairs, setCurrencyPairs] = useState([])
   const [total, setTotal] = useState(0)
 
@@ -46,7 +46,7 @@ const ExchangeContainer = ({ connection, country, currencies, name }) => {
     connection.subscribeToCurrencyPairs(updateCurrencyPairs)
   }, [])
   useEffect(() => {
-    if (!balances || !currencyPairs) {
+    if (balances.length === 0 || !currencyPairs) {
       return
     }
 
@@ -56,7 +56,7 @@ const ExchangeContainer = ({ connection, country, currencies, name }) => {
   return (
     <div>
       <h2>{name} Exchange</h2>
-      <DataPresenter data={balances}>
+      <DataPresenter data={balances} isDataEmpty={data => data.length === 0}>
         {balances => (
           <>
             <Balances

@@ -8,9 +8,10 @@ const DataPresenter = (
     data,
     loader = <CircularProgress/>,
     transformData = data => data,
+    isDataEmpty = data => !data,
   },
 ) => {
-  if (!data) {
+  if (isDataEmpty(data)) {
     return loader
   }
 
