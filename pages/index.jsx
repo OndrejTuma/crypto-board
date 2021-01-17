@@ -1,8 +1,9 @@
 import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+
 import ExchangeContainer from '../features/Exchange/containers/ExchangeContainer'
 import CoinMate from '../adapters/CoinMate'
 
+import styles from '../styles/Home.module.css'
 
 export default function Home({ coinmateConnectionInfo }) {
   const { publicKey, privateKey, clientId } = coinmateConnectionInfo
