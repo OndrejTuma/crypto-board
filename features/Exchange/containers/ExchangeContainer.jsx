@@ -32,7 +32,7 @@ const ExchangeContainer = ({ connection, country, currencies, name }) => {
   }
 
   useEffect(() => {
-    connection.getBalances(currencies).then(res => setBalances(res))
+    connection.getBalances(currencies).then(res => Array.isArray(res) && setBalances(res))
     connection.getBalances(currency).then(res => {
       const mainBalance = getOr(0, '[0].balance')(res)
 
@@ -42,8 +42,10 @@ const ExchangeContainer = ({ connection, country, currencies, name }) => {
     })
     connection.getCurrencyPairs(currencies, currency).then(res => setCurrencyPairs(res))
 
-    connection.createSocketForCurrencyPairs(currencies, currency)
-    connection.subscribeToCurrencyPairs(updateCurrencyPairs)
+    if (connection.createSocketForCurrencyPairs && connection.subscribeToCurrencyPairs) {
+      connection.createSocketForCurrencyPairs(currencies, currency)
+      connection.subscribeToCurrencyPairs(updateCurrencyPairs)
+    }
   }, [])
   useEffect(() => {
     if (balances.length === 0 || !currencyPairs) {

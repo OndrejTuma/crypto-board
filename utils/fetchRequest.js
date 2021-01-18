@@ -1,10 +1,16 @@
 async function fetchRequest(request) {
   try {
-    return await fetch(request).then(res => res.json())
+    const response = await fetch(request)
+
+    if (response.status >= 400) {
+      throw new Error(`${response.status}: ${response.statusText}`)
+    }
+
+    return await response.json()
   } catch (e) {
     return {
       error: true,
-      errorMessage: 'Nepodařilo se získat data',
+      errorMessage: e.message,
     }
   }
 }
