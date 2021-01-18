@@ -10,11 +10,6 @@ export default function Home({ bitstampConnectionInfo, coinmateConnectionInfo })
   const { publicKey, privateKey, clientId } = coinmateConnectionInfo
   const { apiKey, secretKey, customerId } = bitstampConnectionInfo
 
-  const bts = new BitStamp(apiKey, secretKey, customerId)
-
-  const nonce = bts._getNonce()
-  console.log(nonce, bts._getSignature(nonce), new Date().getTime())
-
   return (
     <div className={styles.container}>
       <Head>
@@ -32,16 +27,15 @@ export default function Home({ bitstampConnectionInfo, coinmateConnectionInfo })
           }}
           name={'CoinMate'}
         />
-        <button onClick={() => fetch('/api/bitstamp/balances')}>Test Bitstamp</button>
-        {/*<ExchangeContainer*/}
-        {/*  connection={new BitStamp(apiKey, secretKey, customerId)}*/}
-        {/*  currencies={['BTC', 'LTC', 'ETH']}*/}
-        {/*  country={{*/}
-        {/*    currency: 'USD',*/}
-        {/*    ISO: 'en-US',*/}
-        {/*  }}*/}
-        {/*  name={'BitStamp'}*/}
-        {/*/>*/}
+        <ExchangeContainer
+          connection={new BitStamp(apiKey, secretKey, customerId)}
+          currencies={['BTC', 'LTC', 'ETH']}
+          country={{
+            currency: 'USD',
+            ISO: 'en-US',
+          }}
+          name={'BitStamp'}
+        />
       </main>
 
       <footer className={styles.footer}>

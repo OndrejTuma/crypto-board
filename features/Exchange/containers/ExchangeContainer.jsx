@@ -66,9 +66,9 @@ const ExchangeContainer = ({ connection, country, currencies, name }) => {
               currencyPairs={currencyPairs}
               formatNumber={formatNumber}
             />
-            {mainCurrencyBalance && (
+            {Math.round(mainCurrencyBalance) > 0 ? (
               <Typography variant={'h5'}>Main currency: {formatNumber(mainCurrencyBalance)}</Typography>
-            )}
+            ) : null}
             <Typography variant={'h4'}>Total: {formatNumber(total + mainCurrencyBalance)}</Typography>
           </>
         )}
