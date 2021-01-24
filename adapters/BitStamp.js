@@ -4,6 +4,7 @@ import getOr from 'lodash/fp/getOr'
 
 import fetchRequest from '../utils/fetchRequest'
 import generateId from '../utils/generateId'
+import CoinMate from './CoinMate'
 
 function BitStamp(apiKey, secretKey, customerId) {
   this.apiKey = apiKey
@@ -21,12 +22,59 @@ BitStamp.prototype._getSignature = function (nonce, url, method, timestamp) {
   const stringToSign = `BITSTAMP ${this.apiKey}${method}${standardUrl.hostname}${standardUrl.pathname}${standardUrl.search}${nonce}${timestamp}v2`
   return HmacSHA256(stringToSign, this.secretKey).toString(Hex).toUpperCase()
 }
+BitStamp.prototype._subscribeToChannel = function (channel) {
+  this.socket.send(JSON.stringify({
+    event: 'bts:subscribe',
+    data: {
+      channel,
+    },
+  }))
+}
+BitStamp.prototype._getCurrencyPair = function (currency, mainCurrency) {
+  return currency.toLocaleLowerCase() + mainCurrency.toLocaleLowerCase()
+}
+BitStamp.prototype._parseCurrencyPair = function (pair, mainCurrency) {
+  return [pair.substr(0, pair.toUpperCase().indexOf(mainCurrency)).toUpperCase(), mainCurrency]
+}
 
+
+BitStamp.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
+  this.socket = new WebSocket(this.websocketUrl)
+
+  this.socket.addEventListener('open', () => {
+    currencies.forEach(currency => this._subscribeToChannel(`order_book_${this._getCurrencyPair(currency, mainCurrency)}`))
+  })
+
+  return this.socket
+}
+BitStamp.prototype.subscribeToCurrencyPairs = function (pairMessage, mainCurrency) {
+  if (typeof pairMessage !== 'function') {
+    return
+  }
+
+  this.socket.addEventListener('message', e => {
+    const { channel, data, event } = JSON.parse(e.data)
+
+    if (event !== 'data') {
+      return
+    }
+
+    const pair = this._parseCurrencyPair(channel.split('_').pop(), mainCurrency)
+    const ask = getOr(0, 'asks[0][0]')(data)
+    const bid = getOr(0, 'bids[0][0]')(data)
+
+    pairMessage({
+      ask,
+      bid,
+      pair,
+    })
+  })
+}
 
 BitStamp.prototype.getBalances = async function (currencies) {
   const request = new Request('/api/bitstamp/balances', {
     method: 'POST',
-    body: JSON.stringify(currencies)
+    body: JSON.stringify(currencies),
   })
 
   return await fetchRequest(request)
@@ -77,7 +125,7 @@ BitStamp.prototype.getCurrencyPairs = async function (currencies, mainCurrency) 
     body: JSON.stringify({
       currencies,
       mainCurrency,
-    })
+    }),
   })
 
   return await fetchRequest(request)
@@ -86,7 +134,7 @@ BitStamp.prototype.fetchCurrencyPairs = async function (currencies, mainCurrency
   const pairs = []
 
   for (let currency of currencies) {
-    const pair = await this.getCurrencyPair(`${currency.toLocaleLowerCase()}${mainCurrency.toLocaleLowerCase()}`)
+    const pair = await this.getCurrencyPair(this._getCurrencyPair(currency, mainCurrency))
 
     pairs.push({
       pair: [currency, mainCurrency],
