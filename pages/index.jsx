@@ -20,36 +20,38 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
       </Head>
 
       <main className={styles.main}>
-        <ExchangeContainer
-          connection={new CoinMate(publicKey, privateKey, clientId)}
-          currencies={['BTC', 'LTC', 'DASH', 'ETH']}
-          mainCurrency={'CZK'}
-          country={{
-            currency: 'CZK',
-            ISO: 'cs-CZ',
-          }}
-          name={'CoinMate'}
-        />
-        <ExchangeContainer
-          connection={new BitStamp(apiKey, secretKey, customerId)}
-          currencies={['BTC', 'LTC', 'ETH']}
-          mainCurrency={'USD'}
-          country={{
-            currency: 'USD',
-            ISO: 'en-US',
-          }}
-          name={'BitStamp'}
-        />
-        <ExchangeContainer
-          connection={new Binance(bApiKey, bSecretKey)}
-          currencies={['BTC', 'LTC', 'ETH']}
-          mainCurrency={'USDT'}
-          country={{
-            currency: 'USD',
-            ISO: 'en-US',
-          }}
-          name={'Binance'}
-        />
+        <div className={styles.exchanges}>
+          <ExchangeContainer
+            connection={new CoinMate(publicKey, privateKey, clientId)}
+            currencies={['BTC', 'LTC', 'ETH']}
+            mainCurrency={'CZK'}
+            country={{
+              currency: 'CZK',
+              ISO: 'cs-CZ',
+            }}
+            name={'CoinMate'}
+          />
+          <ExchangeContainer
+            connection={new BitStamp(apiKey, secretKey, customerId)}
+            currencies={['BTC', 'LTC', 'ETH']}
+            mainCurrency={'USD'}
+            country={{
+              currency: 'USD',
+              ISO: 'en-US',
+            }}
+            name={'BitStamp'}
+          />
+          <ExchangeContainer
+            connection={new Binance(bApiKey, bSecretKey)}
+            currencies={['BTC', 'LTC', 'ETH']}
+            mainCurrency={'USDT'}
+            country={{
+              currency: 'USD',
+              ISO: 'en-US',
+            }}
+            name={'Binance'}
+          />
+        </div>
       </main>
 
       <footer className={styles.footer}>
