@@ -5,10 +5,12 @@ import CoinMate from '../adapters/CoinMate'
 
 import styles from '../styles/Home.module.css'
 import BitStamp from '../adapters/BitStamp'
+import Binance from '../adapters/Binance'
 
-export default function Home({ bitstampConnectionInfo, coinmateConnectionInfo }) {
+export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, coinmateConnectionInfo }) {
   const { publicKey, privateKey, clientId } = coinmateConnectionInfo
   const { apiKey, secretKey, customerId } = bitstampConnectionInfo
+  const { apiKey: bApiKey, secretKey: bSecretKey } = binanceConnectionInfo
 
   return (
     <div className={styles.container}>
@@ -21,6 +23,7 @@ export default function Home({ bitstampConnectionInfo, coinmateConnectionInfo })
         <ExchangeContainer
           connection={new CoinMate(publicKey, privateKey, clientId)}
           currencies={['BTC', 'LTC', 'DASH', 'ETH']}
+          mainCurrency={'CZK'}
           country={{
             currency: 'CZK',
             ISO: 'cs-CZ',
@@ -30,11 +33,22 @@ export default function Home({ bitstampConnectionInfo, coinmateConnectionInfo })
         <ExchangeContainer
           connection={new BitStamp(apiKey, secretKey, customerId)}
           currencies={['BTC', 'LTC', 'ETH']}
+          mainCurrency={'USD'}
           country={{
             currency: 'USD',
             ISO: 'en-US',
           }}
           name={'BitStamp'}
+        />
+        <ExchangeContainer
+          connection={new Binance(bApiKey, bSecretKey)}
+          currencies={['BTC', 'LTC', 'ETH']}
+          mainCurrency={'USDT'}
+          country={{
+            currency: 'USD',
+            ISO: 'en-US',
+          }}
+          name={'Binance'}
         />
       </main>
 
@@ -56,9 +70,14 @@ export async function getStaticProps() {
     secretKey: process.env.BITSTAMP_API_SECRET,
     customerId: process.env.BITSTAMP_CUSTOMER_ID,
   }
+  const binanceConnectionInfo = {
+    apiKey: process.env.BINANCE_API_KEY,
+    secretKey: process.env.BINANCE_SECRET_KEY,
+  }
 
   return {
     props: {
+      binanceConnectionInfo,
       bitstampConnectionInfo,
       coinmateConnectionInfo,
     },

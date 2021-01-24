@@ -9,7 +9,7 @@ import getTotal from '../../../utils/getTotal'
 import Typography from '@material-ui/core/Typography'
 
 
-const ExchangeContainer = ({ connection, country, currencies, name }) => {
+const ExchangeContainer = ({ connection, country, currencies, mainCurrency, name }) => {
   const { currency, ISO } = country
   const [mainCurrencyBalance, setMainCurrencyBalance] = useState(0)
   const [balances, setBalances] = useState([])
@@ -33,18 +33,18 @@ const ExchangeContainer = ({ connection, country, currencies, name }) => {
 
   useEffect(() => {
     connection.getBalances(currencies).then(res => Array.isArray(res) && setBalances(res))
-    connection.getBalances(currency).then(res => {
+    connection.getBalances(mainCurrency).then(res => {
       const mainBalance = getOr(0, '[0].balance')(res)
 
       if (mainBalance) {
         setMainCurrencyBalance(mainBalance)
       }
     })
-    connection.getCurrencyPairs(currencies, currency).then(res => setCurrencyPairs(res))
+    connection.getCurrencyPairs(currencies, mainCurrency).then(res => setCurrencyPairs(res))
 
     if (connection.createSocketForCurrencyPairs && connection.subscribeToCurrencyPairs) {
-      connection.createSocketForCurrencyPairs(currencies, currency)
-      connection.subscribeToCurrencyPairs(updateCurrencyPairs)
+      connection.createSocketForCurrencyPairs(currencies, mainCurrency)
+      connection.subscribeToCurrencyPairs(updateCurrencyPairs, mainCurrency)
     }
   }, [])
   useEffect(() => {

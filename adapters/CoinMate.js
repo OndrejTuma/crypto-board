@@ -119,8 +119,7 @@ CoinMate.prototype.getCurrencyPairs = async function (currencies, mainCurrency) 
     }
   }
 
-  return pairs.map(({ amount, ask, bid, pair }) => ({
-    amount,
+  return pairs.map(({ ask, bid, pair }) => ({
     ask,
     bid,
     pair,
