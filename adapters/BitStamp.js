@@ -4,12 +4,10 @@ import getOr from 'lodash/fp/getOr'
 
 import fetchRequest from '../utils/fetchRequest'
 import generateId from '../utils/generateId'
-import CoinMate from './CoinMate'
 
-function BitStamp(apiKey, secretKey, customerId) {
+function BitStamp(apiKey, secretKey) {
   this.apiKey = apiKey
   this.secretKey = secretKey
-  this.customerId = parseInt(customerId)
   this.url = 'https://www.bitstamp.net/api/v2'
   this.websocketUrl = 'wss://ws.bitstamp.net'
 }

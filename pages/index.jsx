@@ -2,14 +2,14 @@ import Head from 'next/head'
 
 import ExchangeContainer from '../features/Exchange/containers/ExchangeContainer'
 import CoinMate from '../adapters/CoinMate'
-
-import styles from '../styles/Home.module.css'
 import BitStamp from '../adapters/BitStamp'
 import Binance from '../adapters/Binance'
 
+import styles from '../styles/Home.module.css'
+
 export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, coinmateConnectionInfo }) {
   const { publicKey, privateKey, clientId } = coinmateConnectionInfo
-  const { apiKey, secretKey, customerId } = bitstampConnectionInfo
+  const { apiKey, secretKey } = bitstampConnectionInfo
   const { apiKey: bApiKey, secretKey: bSecretKey } = binanceConnectionInfo
 
   return (
@@ -32,7 +32,7 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
             name={'CoinMate'}
           />
           <ExchangeContainer
-            connection={new BitStamp(apiKey, secretKey, customerId)}
+            connection={new BitStamp(apiKey, secretKey)}
             currencies={['BTC', 'LTC', 'ETH']}
             mainCurrency={'USD'}
             country={{
@@ -70,7 +70,6 @@ export async function getStaticProps() {
   const bitstampConnectionInfo = {
     apiKey: process.env.BITSTAMP_API_KEY,
     secretKey: process.env.BITSTAMP_API_SECRET,
-    customerId: process.env.BITSTAMP_CUSTOMER_ID,
   }
   const binanceConnectionInfo = {
     apiKey: process.env.BINANCE_API_KEY,
