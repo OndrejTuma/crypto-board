@@ -1,16 +1,30 @@
+import { useContext } from 'react'
 import Head from 'next/head'
+import Link from 'next/link'
 
 import ExchangeContainer from '../features/Exchange/containers/ExchangeContainer'
 import CoinMate from '../adapters/CoinMate'
 import BitStamp from '../adapters/BitStamp'
 import Binance from '../adapters/Binance'
 
+import { AuthContext } from '../store/AuthContext'
+
 import styles from '../styles/Home.module.css'
 
 export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, coinmateConnectionInfo }) {
+  const auth = useContext(AuthContext)
   const { publicKey, privateKey, clientId } = coinmateConnectionInfo
   const { apiKey, secretKey } = bitstampConnectionInfo
   const { apiKey: bApiKey, secretKey: bSecretKey } = binanceConnectionInfo
+
+  if (!auth.isLogged) {
+    return (
+      <div>
+        <h1>Restricted area</h1>
+        <p>Continue to <Link href={'/auth'}><a>login page</a></Link></p>
+      </div>
+    )
+  }
 
   return (
     <div className={styles.container}>
@@ -19,6 +33,7 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
         <link rel="icon" href="/favicon.ico"/>
       </Head>
 
+      {console.log(auth.user)}
       <main className={styles.main}>
         <div className={styles.exchanges}>
           <ExchangeContainer
