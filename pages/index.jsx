@@ -33,7 +33,6 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
         <link rel="icon" href="/favicon.ico"/>
       </Head>
 
-      {console.log(auth.user)}
       <main className={styles.main}>
         <div className={styles.exchanges}>
           <ExchangeContainer

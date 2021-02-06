@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import Cookies from 'js-cookie'
 
 import { AuthContext } from '../store/AuthContext'
 import firebaseGetCurrentUser from '../lib/firebaseGetCurrentUser'
+import firebaseInit from '../lib/firebaseInit'
+import firebaseCookieName from '../consts/firebaseCookieName'
 
 import '../styles/globals.css'
-import firebaseInit from '../lib/firebaseInit'
 
 function MyApp({ Component, pageProps }) {
   const [isLogged, setIsLogged] = useState(false)
@@ -13,24 +15,27 @@ function MyApp({ Component, pageProps }) {
   const authProviderValue = {
     isLogged,
     user,
-    logIn: user => {
+    logIn: async user => {
       setIsLogged(true)
       setUser(user)
+
+      user.getIdToken().then(token => Cookies.set(firebaseCookieName, token))
     },
     logOut: () => {
       setIsLogged(false)
       setUser(null)
-    }
+    },
   }
 
   useEffect(() => {
     firebaseInit()
 
-    const user = firebaseGetCurrentUser()
-    if (user) {
-      setIsLogged(true)
-      setUser(user)
-    }
+    firebaseGetCurrentUser().then(user => {
+      if (user) {
+        setIsLogged(true)
+        setUser(user)
+      }
+    })
   }, [isLogged])
 
   return (

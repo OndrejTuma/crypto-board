@@ -26,8 +26,8 @@ const LoginFormContainer = () => {
   return (
     <Formik
       initialValues={{
-        email: '',
-        password: '',
+        email: 'test@test.test',
+        password: '123456',
       }}
       onSubmit={onSubmit}
     >
