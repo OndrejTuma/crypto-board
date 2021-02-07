@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import React from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 
@@ -6,72 +6,80 @@ import ExchangeContainer from '../features/Exchange/containers/ExchangeContainer
 import CoinMate from '../adapters/CoinMate'
 import BitStamp from '../adapters/BitStamp'
 import Binance from '../adapters/Binance'
-
-import { AuthContext } from '../store/AuthContext'
+import SignOutButtonContainer from '../containers/SignOutButtonContainer'
+import useAuth from '../hooks/useAuth'
+import DataPresenter from '../components/DataPresenter'
 
 import styles from '../styles/Home.module.css'
 
 export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, coinmateConnectionInfo }) {
-  const auth = useContext(AuthContext)
+  const auth = useAuth()
+
   const { publicKey, privateKey, clientId } = coinmateConnectionInfo
   const { apiKey, secretKey } = bitstampConnectionInfo
   const { apiKey: bApiKey, secretKey: bSecretKey } = binanceConnectionInfo
 
-  if (!auth.isLogged) {
-    return (
-      <div>
-        <h1>Restricted area</h1>
-        <p>Continue to <Link href={'/auth'}><a>login page</a></Link></p>
-      </div>
-    )
-  }
-
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Crypto Dashboard</title>
-        <link rel="icon" href="/favicon.ico"/>
-      </Head>
-
-      <main className={styles.main}>
-        <div className={styles.exchanges}>
-          <ExchangeContainer
-            connection={new CoinMate(publicKey, privateKey, clientId)}
-            currencies={['BTC', 'LTC', 'ETH']}
-            mainCurrency={'CZK'}
-            country={{
-              currency: 'CZK',
-              ISO: 'cs-CZ',
-            }}
-            name={'CoinMate'}
-          />
-          <ExchangeContainer
-            connection={new BitStamp(apiKey, secretKey)}
-            currencies={['BTC', 'LTC', 'ETH']}
-            mainCurrency={'USD'}
-            country={{
-              currency: 'USD',
-              ISO: 'en-US',
-            }}
-            name={'BitStamp'}
-          />
-          <ExchangeContainer
-            connection={new Binance(bApiKey, bSecretKey)}
-            currencies={['BTC', 'LTC', 'ETH']}
-            mainCurrency={'USDT'}
-            country={{
-              currency: 'USD',
-              ISO: 'en-US',
-            }}
-            name={'Binance'}
-          />
+    <DataPresenter
+      data={auth}
+      isDataEmpty={({isLoading}) => isLoading}
+    >
+      {!auth.isLogged ? (
+        <div>
+          <h1>Restricted area</h1>
+          <p>Continue to <Link href={'/auth'}><a>login page</a></Link></p>
         </div>
-      </main>
+      ) : (
+        <div className={styles.container}>
+          <Head>
+            <title>Crypto Dashboard</title>
+            <link rel="icon" href="/favicon.ico"/>
+          </Head>
 
-      <footer className={styles.footer}>
-        Exchange aggregator
-      </footer>
-    </div>
+          <div>
+            <SignOutButtonContainer/>
+          </div>
+          <main className={styles.main}>
+            <div className={styles.exchanges}>
+              <ExchangeContainer
+                connection={new CoinMate(publicKey, privateKey, clientId)}
+                currencies={['BTC', 'LTC', 'ETH']}
+                mainCurrency={'CZK'}
+                country={{
+                  currency: 'CZK',
+                  ISO: 'cs-CZ',
+                }}
+                name={'CoinMate'}
+              />
+              <ExchangeContainer
+                connection={new BitStamp(apiKey, secretKey)}
+                currencies={['BTC', 'LTC', 'ETH']}
+                mainCurrency={'USD'}
+                country={{
+                  currency: 'USD',
+                  ISO: 'en-US',
+                }}
+                name={'BitStamp'}
+              />
+              <ExchangeContainer
+                connection={new Binance(bApiKey, bSecretKey)}
+                currencies={['BTC', 'LTC', 'ETH']}
+                mainCurrency={'USDT'}
+                country={{
+                  currency: 'USD',
+                  ISO: 'en-US',
+                }}
+                name={'Binance'}
+              />
+            </div>
+          </main>
+
+          <footer className={styles.footer}>
+            Exchange aggregator
+          </footer>
+        </div>
+      )}
+    </DataPresenter>
   )
 }
 

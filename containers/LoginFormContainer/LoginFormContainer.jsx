@@ -1,21 +1,21 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { useRouter } from 'next/router'
 import { Formik, Form, Field, ErrorMessage } from 'formik'
 
 import firebaseAuth from '../../lib/firebaseAuth'
-import { AuthContext } from '../../store/AuthContext'
+import useAuth from '../../hooks/useAuth'
 
 const LoginFormContainer = () => {
-  const auth = useContext(AuthContext)
+  const auth = useAuth()
   const router = useRouter()
 
   const onSubmit = async ({ email, password }, { setSubmitting }) => {
     try {
       const { user } = await firebaseAuth(email, password)
 
-      auth.logIn(user)
+      await auth.logIn(user)
 
-      router.push('/')
+      await router.push('/')
     } catch (e) {
       alert(e.message)
     } finally {
