@@ -1,7 +1,11 @@
 import React from 'react'
 import { useRouter } from 'next/router'
-import { Formik, Form, Field, ErrorMessage } from 'formik'
+import { Formik, Form, Field } from 'formik'
+import Button from '@material-ui/core/Button'
+import FormLabel from '@material-ui/core/FormLabel'
+import Grid from '@material-ui/core/Grid'
 
+import Input from '../../components/Input'
 import firebaseAuth from '../../lib/firebaseAuth'
 import useAuth from '../../hooks/useAuth'
 
@@ -10,6 +14,7 @@ const LoginFormContainer = () => {
   const router = useRouter()
 
   const onSubmit = async ({ email, password }, { setSubmitting }) => {
+    console.log(email, password)
     try {
       const { user } = await firebaseAuth(email, password)
 
@@ -26,20 +31,28 @@ const LoginFormContainer = () => {
   return (
     <Formik
       initialValues={{
-        email: 'test@test.test',
-        password: '123456',
+        email: '',
+        password: '',
       }}
       onSubmit={onSubmit}
     >
       {({ isSubmitting }) => (
         <Form>
-          <Field type="email" name="email"/>
-          <ErrorMessage name="email" component="div"/>
-          <Field type="password" name="password"/>
-          <ErrorMessage name="password" component="div"/>
-          <button type="submit" disabled={isSubmitting}>
-            Submit
-          </button>
+          <Grid container spacing={3}>
+            <Grid item>
+              <FormLabel required>Email:</FormLabel>
+              <Field component={Input} type="email" name="email"/>
+            </Grid>
+            <Grid item>
+              <FormLabel required>Password:</FormLabel>
+              <Field component={Input} type="password" name="password"/>
+            </Grid>
+            <Grid item>
+              <Button variant={'contained'} color={'primary'} type={'submit'} disabled={isSubmitting}>
+                Submit
+              </Button>
+            </Grid>
+          </Grid>
         </Form>
       )}
     </Formik>

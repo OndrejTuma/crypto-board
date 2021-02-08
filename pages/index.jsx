@@ -1,6 +1,8 @@
 import React from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import Box from '@material-ui/core/Box'
+import Grid from '@material-ui/core/Grid'
 
 import ExchangeContainer from '../features/Exchange/containers/ExchangeContainer'
 import CoinMate from '../adapters/CoinMate'
@@ -30,54 +32,58 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
           <p>Continue to <Link href={'/auth'}><a>login page</a></Link></p>
         </div>
       ) : (
-        <div className={styles.container}>
+        <>
           <Head>
             <title>Crypto Dashboard</title>
             <link rel="icon" href="/favicon.ico"/>
           </Head>
-
-          <div>
+          <Grid container justify={'flex-end'}>
             <SignOutButtonContainer/>
-          </div>
-          <main className={styles.main}>
-            <div className={styles.exchanges}>
-              <ExchangeContainer
-                connection={new CoinMate(publicKey, privateKey, clientId)}
-                currencies={['BTC', 'LTC', 'ETH']}
-                mainCurrency={'CZK'}
-                country={{
-                  currency: 'CZK',
-                  ISO: 'cs-CZ',
-                }}
-                name={'CoinMate'}
-              />
-              <ExchangeContainer
-                connection={new BitStamp(apiKey, secretKey)}
-                currencies={['BTC', 'LTC', 'ETH']}
-                mainCurrency={'USD'}
-                country={{
-                  currency: 'USD',
-                  ISO: 'en-US',
-                }}
-                name={'BitStamp'}
-              />
-              <ExchangeContainer
-                connection={new Binance(bApiKey, bSecretKey)}
-                currencies={['BTC', 'LTC', 'ETH']}
-                mainCurrency={'USDT'}
-                country={{
-                  currency: 'USD',
-                  ISO: 'en-US',
-                }}
-                name={'Binance'}
-              />
-            </div>
-          </main>
-
+          </Grid>
+          <Box my={7} px={5}>
+            <Grid container justify={'space-around'}>
+              <Grid item xs={12} md={4}>
+                <ExchangeContainer
+                  connection={new CoinMate(publicKey, privateKey, clientId)}
+                  currencies={['BTC', 'LTC', 'ETH']}
+                  mainCurrency={'CZK'}
+                  country={{
+                    currency: 'CZK',
+                    ISO: 'cs-CZ',
+                  }}
+                  name={'CoinMate'}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <ExchangeContainer
+                  connection={new BitStamp(apiKey, secretKey)}
+                  currencies={['BTC', 'LTC', 'ETH']}
+                  mainCurrency={'USD'}
+                  country={{
+                    currency: 'USD',
+                    ISO: 'en-US',
+                  }}
+                  name={'BitStamp'}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <ExchangeContainer
+                  connection={new Binance(bApiKey, bSecretKey)}
+                  currencies={['BTC', 'LTC', 'ETH']}
+                  mainCurrency={'USDT'}
+                  country={{
+                    currency: 'USD',
+                    ISO: 'en-US',
+                  }}
+                  name={'Binance'}
+                />
+              </Grid>
+            </Grid>
+          </Box>
           <footer className={styles.footer}>
             Exchange aggregator
           </footer>
-        </div>
+        </>
       )}
     </DataPresenter>
   )
