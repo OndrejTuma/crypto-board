@@ -33,3 +33,6 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# secret files
+server/serviceAccountKey.json
