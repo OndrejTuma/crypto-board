@@ -1,5 +1,5 @@
 #!make
-include ../../.env
+include ../../.env.local
 
 .PHONY: run build stop kill clean-all
 .DEFAULT_GOAL := run
