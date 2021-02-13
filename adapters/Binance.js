@@ -1,9 +1,7 @@
 import HmacSHA256 from 'crypto-js/hmac-sha256'
 import Hex from 'crypto-js/enc-hex'
-import getOr from 'lodash/fp/getOr'
 
 import fetchRequest from '../utils/fetchRequest'
-import CoinMate from './CoinMate'
 
 function Binance(apiKey, secretKey) {
   this.apiKey = apiKey
@@ -22,6 +20,10 @@ Binance.prototype._getSignature = function (queryString = '', requestBody = '') 
 
 
 Binance.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
+  if (this.socket) {
+    this.socket.close()
+  }
+
   const params = currencies.map(currency => `${currency.toLowerCase()}${mainCurrency.toLowerCase()}@ticker`)
   const socketUrl = `${this.websocketUrl}/stream?streams=${params.join('/')}`
   this.socket = new WebSocket(socketUrl)
@@ -88,7 +90,7 @@ Binance.prototype.fetchBalances = async function (currencies) {
     .filter(({ coin }) => currencies.indexOf(coin) > -1)
     .map(({ coin: currency, free: balance }) => ({
       currency,
-      balance,
+      balance: parseFloat(balance),
     }))
 }
 Binance.prototype.getCurrencyPairs = async function (currencies, mainCurrency) {

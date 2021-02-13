@@ -1,23 +1,30 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import find from 'lodash/fp/find'
+import flow from 'lodash/fp/flow'
 import getOr from 'lodash/fp/getOr'
+import Typography from '@material-ui/core/Typography'
 
 import DataPresenter from '../../../components/DataPresenter'
 import Balances from '../components/Balances'
 
 import formatNumberFactory from '../../../utils/formatNumber'
 import getTotal from '../../../utils/getTotal'
-import Typography from '@material-ui/core/Typography'
+import useCurrencies from '../hooks/useCurrencies'
+import CurrenciesSelectorContainer from './CurrenciesSelectorContainer'
 
 
-const ExchangeContainer = ({ connection, country, currencies, mainCurrency, name }) => {
+const ExchangeContainer = ({ connection, country, currencies: defaultCurrencies, mainCurrency, name }) => {
   const { currency, ISO } = country
   const [mainCurrencyBalance, setMainCurrencyBalance] = useState(0)
   const [balances, setBalances] = useState([])
+  const currencySelector = useCurrencies(defaultCurrencies)
   const [currencyPairs, setCurrencyPairs] = useState([])
   const [total, setTotal] = useState(0)
+  const [currencies] = currencySelector
 
   const formatNumber = formatNumberFactory(ISO, currency)
-  const updateCurrencyPairs = currencyPair => {
+
+  const updateCurrencyPairs = useCallback(currencyPair => {
     setCurrencyPairs(currencyPairs => {
       if (currencyPairs.find(({ pair }) => pair[0] === currencyPair.pair[0])) {
         return currencyPairs.map(stateCurrencyPair => (
@@ -29,12 +36,12 @@ const ExchangeContainer = ({ connection, country, currencies, mainCurrency, name
         currencyPair,
       ]
     })
-  }
+  }, [])
 
   useEffect(() => {
     connection.getBalances(currencies).then(res => Array.isArray(res) && setBalances(res))
-    connection.getBalances(mainCurrency).then(res => {
-      const mainBalance = getOr(0, '[0].balance')(res)
+    connection.getBalances([mainCurrency]).then(res => {
+      const mainBalance = flow(find(balance => balance && balance.currency === mainCurrency), getOr(0, 'balance'))(res)
 
       if (mainBalance) {
         setMainCurrencyBalance(mainBalance)
@@ -46,7 +53,7 @@ const ExchangeContainer = ({ connection, country, currencies, mainCurrency, name
       connection.createSocketForCurrencyPairs(currencies, mainCurrency)
       connection.subscribeToCurrencyPairs(updateCurrencyPairs, mainCurrency)
     }
-  }, [])
+  }, [currencies])
   useEffect(() => {
     if (balances.length === 0 || !currencyPairs) {
       return
@@ -58,6 +65,7 @@ const ExchangeContainer = ({ connection, country, currencies, mainCurrency, name
   return (
     <div>
       <h2>{name} Exchange</h2>
+      <CurrenciesSelectorContainer currencySelector={currencySelector} />
       <DataPresenter data={balances} isDataEmpty={data => data.length === 0}>
         {balances => (
           <>

@@ -37,6 +37,10 @@ BitStamp.prototype._parseCurrencyPair = function (pair, mainCurrency) {
 
 
 BitStamp.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
+  if (this.socket) {
+    this.socket.close()
+  }
+
   this.socket = new WebSocket(this.websocketUrl)
 
   this.socket.addEventListener('open', () => {

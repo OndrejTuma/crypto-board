@@ -14,7 +14,6 @@ const LoginFormContainer = () => {
   const router = useRouter()
 
   const onSubmit = async ({ email, password }, { setSubmitting }) => {
-    console.log(email, password)
     try {
       const { user } = await firebaseAuth(email, password)
 
