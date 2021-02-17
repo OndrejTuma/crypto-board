@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import useLocalStorage from '../../../hooks/useLocalStorage'
 
-const useCurrencies = (defaultCurrencies) => {
-  const [currencies, setCurrencies] = useState([...defaultCurrencies])
+const localStorageKey = 'exchange_currencies'
+
+const useCurrencies = (key, defaultCurrencies) => {
+  const [currencies, setCurrencies] = useLocalStorage(`${localStorageKey}_${key.toLowerCase()}`, [...defaultCurrencies])
 
   return [currencies, setCurrencies]
 }

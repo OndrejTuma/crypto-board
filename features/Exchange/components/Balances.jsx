@@ -1,18 +1,35 @@
 import React from 'react'
+import { makeStyles } from '@material-ui/core/styles'
 import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import CardHeader from '@material-ui/core/CardHeader'
 import Typography from '@material-ui/core/Typography'
-import Grid from '@material-ui/core/Grid'
 import Divider from '@material-ui/core/Divider'
 import Skeleton from '@material-ui/lab/Skeleton'
+import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box'
 
 import DataPresenter from '../../../components/DataPresenter'
 
+const useStyles = makeStyles((theme) => ({
+  gridList: {
+    overflow: 'auto',
+    flexWrap: 'nowrap',
+    // Promote the list into his own layer on Chrome. This cost memory but helps keeping high FPS.
+    transform: 'translateZ(0)',
+  },
+  center: {
+    textAlign: 'center',
+  }
+}));
+
+
 const Balances = ({ balances, currencyPairs, formatNumber }) => {
+  const classes = useStyles()
+
   return (
-    <Typography component={'div'} paragraph>
-      <Grid container spacing={2}>
+    <Box mb={3}>
+      <Grid container spacing={2} className={classes.gridList}>
         {balances.map(({ currency, balance }) => {
           const currencyPair = currencyPairs && currencyPairs.find(({ pair }) => pair[0] === currency)
 
@@ -22,6 +39,10 @@ const Balances = ({ balances, currencyPairs, formatNumber }) => {
                 <CardHeader
                   title={currency}
                   subheader={balance}
+                  classes={{
+                    title: classes.center,
+                    subheader: classes.center,
+                  }}
                 />
                 <Divider/>
                 <CardContent>
@@ -46,7 +67,7 @@ const Balances = ({ balances, currencyPairs, formatNumber }) => {
           )
         })}
       </Grid>
-    </Typography>
+    </Box>
   )
 }
 

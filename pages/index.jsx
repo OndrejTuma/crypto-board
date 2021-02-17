@@ -3,6 +3,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import Box from '@material-ui/core/Box'
 import Grid from '@material-ui/core/Grid'
+import Typography from '@material-ui/core/Typography'
 
 import ExchangeContainer from '../features/Exchange/containers/ExchangeContainer'
 import CoinMate from '../adapters/CoinMate'
@@ -27,10 +28,14 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
       isDataEmpty={({isLoading}) => isLoading}
     >
       {!auth.isLogged ? (
-        <div>
-          <h1>Restricted area</h1>
-          <p>Continue to <Link href={'/auth'}><a>login page</a></Link></p>
-        </div>
+        <Box my={10}>
+          <Grid container justify={'center'}>
+            <Typography align={'center'} component={'div'}>
+              <h1>Restricted area</h1>
+              <p>Continue to <Link href={'/auth'}><a>login page</a></Link></p>
+            </Typography>
+          </Grid>
+        </Box>
       ) : (
         <>
           <Head>
@@ -38,10 +43,12 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
             <link rel="icon" href="/favicon.ico"/>
           </Head>
           <Grid container justify={'flex-end'}>
-            <SignOutButtonContainer/>
+            <Box p={5}>
+              <SignOutButtonContainer/>
+            </Box>
           </Grid>
           <Box my={7} px={5}>
-            <Grid container justify={'space-around'}>
+            <Grid container justify={'space-around'} spacing={3}>
               <Grid item xs={12} md={4}>
                 <ExchangeContainer
                   connection={new CoinMate(publicKey, privateKey, clientId)}
