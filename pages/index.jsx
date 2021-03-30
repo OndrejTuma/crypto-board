@@ -77,7 +77,7 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
                 <ExchangeContainer
                   connection={new Binance(bApiKey, bSecretKey)}
                   currencies={['BTC', 'LTC', 'ETH']}
-                  mainCurrency={'USDT'}
+                  mainCurrency={'BUSD'}
                   country={{
                     currency: 'USD',
                     ISO: 'en-US',
