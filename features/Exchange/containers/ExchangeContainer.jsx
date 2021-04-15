@@ -5,24 +5,22 @@ import getOr from 'lodash/fp/getOr'
 import Typography from '@material-ui/core/Typography'
 
 import DataPresenter from '../../../components/DataPresenter'
-import Balances from '../components/Balances'
+import Price from '../../../components/Price'
 
-import formatNumberFactory from '../../../utils/formatNumber'
 import getTotal from '../../../utils/getTotal'
+import CurrencyPairs from '../components/CurrencyPairs'
 import useCurrencies from '../hooks/useCurrencies'
 import CurrenciesSelectorContainer from './CurrenciesSelectorContainer'
+import CountryContext from '../../../contexts/CountryContext'
 
 
 const ExchangeContainer = ({ connection, country, currencies: defaultCurrencies, mainCurrency, name }) => {
-  const { currency, ISO } = country
   const [mainCurrencyBalance, setMainCurrencyBalance] = useState(0)
   const [balances, setBalances] = useState([])
   const currencySelector = useCurrencies(name, defaultCurrencies)
   const [currencyPairs, setCurrencyPairs] = useState([])
   const [total, setTotal] = useState(0)
   const [currencies] = currencySelector
-
-  const formatNumber = formatNumberFactory(ISO, currency)
 
   const updateCurrencyPairs = useCallback(currencyPair => {
     setCurrencyPairs(currencyPairs => {
@@ -37,22 +35,26 @@ const ExchangeContainer = ({ connection, country, currencies: defaultCurrencies,
       ]
     })
   }, [])
+  const beforeCurrencyAddHandler = currency => setCurrencyPairs(pairs => ([
+    ...pairs,
+    { pair: [currency, mainCurrency] },
+  ]))
+  const beforeCurrencyDeleteHandler = currency => setCurrencyPairs(pairs => pairs.filter(({ pair }) => pair[0] !== currency))
 
   useEffect(() => {
+    // getting balances to defined currencies
     connection.getBalances(currencies).then(res => Array.isArray(res) && setBalances(res))
+    // getting balance of main currency (if there is any)
     connection.getBalances([mainCurrency]).then(res => {
-      const mainBalance = flow(find(balance => balance && balance.currency === mainCurrency), getOr(0, 'balance'))(res)
+      const mainBalance = flow(find(['currency', mainCurrency]), getOr(0, 'balance'))(res)
 
-      if (mainBalance) {
-        setMainCurrencyBalance(mainBalance)
-      }
+      setMainCurrencyBalance(mainBalance)
     })
-    connection.getCurrencyPairs(currencies, mainCurrency).then(res => setCurrencyPairs(res))
 
-    if (connection.createSocketForCurrencyPairs && connection.subscribeToCurrencyPairs) {
-      connection.createSocketForCurrencyPairs(currencies, mainCurrency)
-      connection.subscribeToCurrencyPairs(updateCurrencyPairs, mainCurrency)
-    }
+    // Using websockets rather than rest api for currency pairs
+    // connection.getCurrencyPairs(currencies, mainCurrency).then(res => setCurrencyPairs(res))
+    connection?.createSocketForCurrencyPairs?.(currencies, mainCurrency)
+    connection?.subscribeToCurrencyPairs?.(updateCurrencyPairs, mainCurrency)
   }, [currencies])
   useEffect(() => {
     if (balances.length === 0 || !currencyPairs) {
@@ -63,25 +65,31 @@ const ExchangeContainer = ({ connection, country, currencies: defaultCurrencies,
   }, [balances, currencyPairs])
 
   return (
-    <div>
-      <h2>{name} Exchange</h2>
-      <CurrenciesSelectorContainer currencySelector={currencySelector} />
-      <DataPresenter data={balances} isDataEmpty={data => data.length === 0}>
-        {balances => (
-          <>
-            <Balances
-              balances={balances}
-              currencyPairs={currencyPairs}
-              formatNumber={formatNumber}
-            />
-            {Math.round(mainCurrencyBalance) > 0 ? (
-              <Typography variant={'h5'}>Main currency: {formatNumber(mainCurrencyBalance)}</Typography>
-            ) : null}
-            <Typography variant={'h4'}>Total: {formatNumber(total + mainCurrencyBalance)}</Typography>
-          </>
-        )}
-      </DataPresenter>
-    </div>
+    <CountryContext.Provider value={country}>
+      <div>
+        <h2>{name} Exchange</h2>
+        <CurrenciesSelectorContainer
+          beforeAdd={beforeCurrencyAddHandler}
+          beforeDelete={beforeCurrencyDeleteHandler}
+          currencySelector={currencySelector}
+        />
+        <DataPresenter data={currencyPairs} isDataEmpty={data => data.length === 0}>
+          {currencyPairs => (
+            <>
+              <CurrencyPairs balances={balances} currencyPairs={currencyPairs}/>
+              {Math.round(mainCurrencyBalance) > 0 ? (
+                <Typography variant={'h5'}>
+                  Main currency: <Price value={mainCurrencyBalance}/>
+                </Typography>
+              ) : null}
+              <Typography variant={'h4'}>
+                Total: <Price value={total + mainCurrencyBalance}/>
+              </Typography>
+            </>
+          )}
+        </DataPresenter>
+      </div>
+    </CountryContext.Provider>
   )
 }
 

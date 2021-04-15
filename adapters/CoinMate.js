@@ -3,6 +3,7 @@ import Hex from 'crypto-js/enc-hex'
 import getOr from 'lodash/fp/getOr'
 
 import fetchRequest from '../utils/fetchRequest'
+import BitStamp from './BitStamp'
 
 function CoinMate(publicKey, privateKey, clientId) {
   this.publicKey = publicKey
@@ -36,10 +37,11 @@ CoinMate.prototype._subscribeToChannel = function (channel) {
 }
 
 
+CoinMate.prototype.closeSocketForCurrencyPairs = function () {
+  this.socket?.close()
+}
 CoinMate.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
-  if (this.socket) {
-    this.socket.close()
-  }
+  this.closeSocketForCurrencyPairs()
 
   this.socket = new WebSocket(this.websocketUrl)
 

@@ -6,16 +6,18 @@ import Chip from '@material-ui/core/Chip'
 
 import Input from '../../../components/Input'
 
-const CurrenciesSelectorContainer = ({ currencySelector }) => {
+const CurrenciesSelectorContainer = ({ currencySelector, beforeAdd, beforeDelete }) => {
   const [currencies, setCurrencies] = currencySelector
 
   const handleDeleteChip = currency => () => {
+    beforeDelete?.(currency)
     setCurrencies(currencies => currencies.filter(name => name !== currency))
   }
   const handleAddCurrency = ({ newCurrency }, { resetForm }) => {
     const currency = newCurrency.toUpperCase()
 
     if (!currencies.includes(currency)) {
+      beforeAdd?.(currency)
       setCurrencies(currencies => [...currencies, currency])
     }
 

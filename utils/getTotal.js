@@ -5,7 +5,7 @@ const getTotal = (balances, pairs) => balances.reduce((acc, { balance, currency 
     return acc + balance
   }
 
-  return acc + balance * pair.bid
+  return acc + balance * (pair?.bid || 0)
 }, 0)
 
 export default getTotal

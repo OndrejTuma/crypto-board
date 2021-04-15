@@ -19,10 +19,11 @@ Binance.prototype._getSignature = function (queryString = '', requestBody = '') 
 }
 
 
+Binance.prototype.closeSocketForCurrencyPairs = function () {
+  this.socket?.close?.()
+}
 Binance.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
-  if (this.socket) {
-    this.socket.close()
-  }
+  this.closeSocketForCurrencyPairs()
 
   const params = currencies.map(currency => `${currency.toLowerCase()}${mainCurrency.toLowerCase()}@ticker`)
   const socketUrl = `${this.websocketUrl}/stream?streams=${params.join('/')}`

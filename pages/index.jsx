@@ -12,10 +12,11 @@ import Binance from '../adapters/Binance'
 import SignOutButtonContainer from '../containers/SignOutButtonContainer'
 import useAuth from '../hooks/useAuth'
 import DataPresenter from '../components/DataPresenter'
+import CNBRates from '../modules/CNBRates'
 
 import styles from '../styles/Home.module.css'
 
-export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, coinmateConnectionInfo }) {
+export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, coinmateConnectionInfo, CZKUSDRate }) {
   const auth = useAuth()
 
   const { publicKey, privateKey, clientId } = coinmateConnectionInfo
@@ -27,6 +28,10 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
       data={auth}
       isDataEmpty={({isLoading}) => isLoading}
     >
+      <Head>
+        <title>Crypto Dashboard</title>
+        <link rel="icon" href="/favicon.ico"/>
+      </Head>
       {!auth.isLogged ? (
         <Box my={10}>
           <Grid container justify={'center'}>
@@ -38,10 +43,6 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
         </Box>
       ) : (
         <>
-          <Head>
-            <title>Crypto Dashboard</title>
-            <link rel="icon" href="/favicon.ico"/>
-          </Head>
           <Grid container justify={'flex-end'}>
             <Box p={5}>
               <SignOutButtonContainer/>
@@ -52,7 +53,7 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
               <Grid item xs={12} md={4}>
                 <ExchangeContainer
                   connection={new CoinMate(publicKey, privateKey, clientId)}
-                  currencies={['BTC', 'LTC', 'ETH']}
+                  currencies={['BTC', 'ETH']}
                   mainCurrency={'CZK'}
                   country={{
                     currency: 'CZK',
@@ -64,7 +65,7 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
               <Grid item xs={12} md={4}>
                 <ExchangeContainer
                   connection={new BitStamp(apiKey, secretKey)}
-                  currencies={['BTC', 'LTC', 'ETH']}
+                  currencies={['BTC', 'ETH']}
                   mainCurrency={'USD'}
                   country={{
                     currency: 'USD',
@@ -76,7 +77,7 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
               <Grid item xs={12} md={4}>
                 <ExchangeContainer
                   connection={new Binance(bApiKey, bSecretKey)}
-                  currencies={['BTC', 'LTC', 'ETH']}
+                  currencies={['BTC', 'ETH']}
                   mainCurrency={'BUSD'}
                   country={{
                     currency: 'USD',
@@ -111,11 +112,16 @@ export async function getStaticProps() {
     secretKey: process.env.BINANCE_SECRET_KEY,
   }
 
+  const rates = new CNBRates()
+  await rates.fetchCurrencyRates()
+
   return {
     props: {
       binanceConnectionInfo,
       bitstampConnectionInfo,
       coinmateConnectionInfo,
+      CZKUSDRate: rates.getCurrencyRate('USD'),
     },
+    revalidate: 60 * 60,
   }
 }
