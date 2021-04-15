@@ -23,7 +23,9 @@ CNBRates.prototype.getCurrencyRate = function (currency) {
 
   currency = currency.toUpperCase()
 
-  return this.rates.find(rate => rate['kód'] === currency)?.kurz
+  const rate = this.rates.find(rate => rate['kód'] === currency)
+
+  return rate ? parseFloat(rate.kurz.replace(',', '.')) : 0
 }
 CNBRates.prototype._getHumanReadableDate = function (date = new Date()) {
   const day = date.getDate()

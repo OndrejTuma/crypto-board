@@ -67,8 +67,8 @@ BitStamp.prototype.subscribeToCurrencyPairs = function (pairMessage, mainCurrenc
     const bid = getOr(0, 'bids[0][0]')(data)
 
     pairMessage({
-      ask,
-      bid,
+      ask: parseFloat(ask),
+      bid: parseFloat(bid),
       pair,
     })
   })

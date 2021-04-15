@@ -14,7 +14,7 @@ import CurrenciesSelectorContainer from './CurrenciesSelectorContainer'
 import CountryContext from '../../../contexts/CountryContext'
 
 
-const ExchangeContainer = ({ connection, country, currencies: defaultCurrencies, mainCurrency, name }) => {
+const ExchangeContainer = ({ afterTotalValueChange, connection, country, currencies: defaultCurrencies, mainCurrency, name }) => {
   const [mainCurrencyBalance, setMainCurrencyBalance] = useState(0)
   const [balances, setBalances] = useState([])
   const currencySelector = useCurrencies(name, defaultCurrencies)
@@ -63,6 +63,9 @@ const ExchangeContainer = ({ connection, country, currencies: defaultCurrencies,
 
     setTotal(getTotal(balances, currencyPairs))
   }, [balances, currencyPairs])
+  useEffect(() => {
+    afterTotalValueChange?.(total + mainCurrencyBalance, country)
+  }, [total, mainCurrencyBalance])
 
   return (
     <CountryContext.Provider value={country}>

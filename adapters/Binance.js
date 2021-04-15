@@ -55,8 +55,8 @@ Binance.prototype.subscribeToCurrencyPairs = function (pairMessage, mainCurrency
     const currency = s.substr(0, s.indexOf(mainCurrency))
 
     pairMessage({
-      ask: a,
-      bid: b,
+      ask: parseFloat(a),
+      bid: parseFloat(b),
       pair: [currency, mainCurrency],
     })
   })

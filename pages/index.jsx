@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import Box from '@material-ui/core/Box'
@@ -13,15 +13,21 @@ import SignOutButtonContainer from '../containers/SignOutButtonContainer'
 import useAuth from '../hooks/useAuth'
 import DataPresenter from '../components/DataPresenter'
 import CNBRates from '../modules/CNBRates'
+import TotalValue from '../features/Exchange/components/TotalValue'
 
 import styles from '../styles/Home.module.css'
 
 export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, coinmateConnectionInfo, CZKUSDRate }) {
   const auth = useAuth()
+  const [totalValues, setTotalValue] = useState(new Map())
 
   const { publicKey, privateKey, clientId } = coinmateConnectionInfo
   const { apiKey, secretKey } = bitstampConnectionInfo
   const { apiKey: bApiKey, secretKey: bSecretKey } = binanceConnectionInfo
+
+  const handleAfterTotalValueChangeFactory = id => (amount, country) => {
+    setTotalValue(new Map([...totalValues.set(id, { amount, country })]))
+  }
 
   return (
     <DataPresenter
@@ -60,6 +66,7 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
                     ISO: 'cs-CZ',
                   }}
                   name={'CoinMate'}
+                  afterTotalValueChange={handleAfterTotalValueChangeFactory(0)}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -72,6 +79,7 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
                     ISO: 'en-US',
                   }}
                   name={'BitStamp'}
+                  afterTotalValueChange={handleAfterTotalValueChangeFactory(1)}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -84,10 +92,12 @@ export default function Home({ binanceConnectionInfo, bitstampConnectionInfo, co
                     ISO: 'en-US',
                   }}
                   name={'Binance'}
+                  afterTotalValueChange={handleAfterTotalValueChangeFactory(2)}
                 />
               </Grid>
             </Grid>
           </Box>
+          <TotalValue totalValues={totalValues} czkUsdRate={CZKUSDRate}/>
           <footer className={styles.footer}>
             Exchange aggregator
           </footer>
