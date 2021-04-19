@@ -55,6 +55,11 @@ const ExchangeContainer = ({ afterTotalValueChange, connection, country, currenc
     // connection.getCurrencyPairs(currencies, mainCurrency).then(res => setCurrencyPairs(res))
     connection?.createSocketForCurrencyPairs?.(currencies, mainCurrency)
     connection?.subscribeToCurrencyPairs?.(updateCurrencyPairs, mainCurrency)
+
+    // TODO: nahradit beforeAdd a beforeDelete updatem currency pairs zde
+    // setCurrencyPairs(pairs => {
+    //   const filteredPairs = pairs.filter(({pair}) => )
+    // })
   }, [currencies])
   useEffect(() => {
     if (balances.length === 0 || !currencyPairs) {

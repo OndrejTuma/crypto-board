@@ -15,11 +15,11 @@ const TotalValue = ({czkUsdRate, totalValues}) => {
 
   return (
     <Box p={5}>
-      <Typography align={'center'}>
+      <Typography align={'center'} component={'div'}>
         <Chip
           icon={<AccountBalanceIcon style={{fontSize: 18}}/>}
           label={formatNumber('cs-CZ', 'CZK')(totalValue)}
-          color={'secondary'}
+          color={'primary'}
           size={'medium'}
           variant={'outlined'}
         />
