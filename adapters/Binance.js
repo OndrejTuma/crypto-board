@@ -7,7 +7,9 @@ function Binance(apiKey, secretKey) {
   this.apiKey = apiKey
   this.secretKey = secretKey
   this.url = 'https://api.binance.com'
+  // this.websocketUrl = 'wss://fstream.binance.com' // not working properly :(
   this.websocketUrl = 'wss://stream.binance.com:9443'
+  this.websocketOpened = false
 }
 
 
@@ -19,25 +21,80 @@ Binance.prototype._getSignature = function (queryString = '', requestBody = '') 
 }
 
 
-Binance.prototype.closeSocketForCurrencyPairs = function () {
+Binance.prototype.closeSocket = function () {
   this.socket?.close?.()
 }
-Binance.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
-  this.closeSocketForCurrencyPairs()
+Binance.prototype.createSocket = function (currencies, mainCurrency) {
+  this.closeSocket()
 
   const params = currencies.map(currency => `${currency.toLowerCase()}${mainCurrency.toLowerCase()}@ticker`)
+
   const socketUrl = `${this.websocketUrl}/stream?streams=${params.join('/')}`
   this.socket = new WebSocket(socketUrl)
 
   this.socket.addEventListener('open', () => {
-    this.socket.send(JSON.stringify({
-      method: 'SUBSCRIBE',
-      params,
-      id: 1,
-    }))
+    this.websocketOpened = true
   })
+}
+Binance.prototype.subscribeToCurrencies = function (currencies, mainCurrency) {
+  const params = currencies.map(currency => `${currency.toLowerCase()}${mainCurrency.toLowerCase()}@ticker`)
 
-  return this.socket
+  if (this.websocketOpened) {
+    this._subscribe(params)
+  } else {
+    this.socket.addEventListener('open', () => {
+      this._subscribe(params)
+    })
+  }
+}
+Binance.prototype.subscribeToCurrency = function (currency, mainCurrency) {
+  this.subscribeToCurrencies([currency], mainCurrency)
+}
+Binance.prototype.unsubscribeFromCurrencies = function (currencies, mainCurrency) {
+  const params = currencies.map(currency => `${currency.toLowerCase()}${mainCurrency.toLowerCase()}@ticker`)
+
+  if (this.websocketOpened) {
+    this._unsubscribe(params)
+  } else {
+    this.socket.addEventListener('open', () => {
+      this._unsubscribe(params)
+    })
+  }
+}
+Binance.prototype.unsubscribeFromCurrency = function (currency, mainCurrency) {
+  this.unsubscribeFromCurrencies([currency], mainCurrency)
+}
+Binance.prototype._subscribe = function (params) {
+  this.socket?.send?.(JSON.stringify({
+    method: 'SUBSCRIBE',
+    params,
+    id: 1,
+  }))
+}
+Binance.prototype._unsubscribe = function (params) {
+  this.socket?.send?.(JSON.stringify({
+    method: 'UNSUBSCRIBE',
+    params,
+    id: 1,
+  }))
+}
+Binance.prototype.registerMessageHandler = function (handler, mainCurrency) {
+  this.socket.addEventListener('message', function (e) {
+    const { data } = JSON.parse(e.data)
+
+    if (!data) {
+      return
+    }
+
+    const { a, b, c, s } = data
+    const currency = s.substr(0, s.indexOf(mainCurrency))
+
+    handler({
+      // ask: parseFloat(a),
+      bid: parseFloat(c),
+      pair: [currency, mainCurrency],
+    })
+  })
 }
 Binance.prototype.subscribeToCurrencyPairs = function (pairMessage, mainCurrency) {
   if (typeof pairMessage !== 'function') {
@@ -51,12 +108,12 @@ Binance.prototype.subscribeToCurrencyPairs = function (pairMessage, mainCurrency
       return
     }
 
-    const { a, b, s } = data
+    const { a, b, c, s } = data
     const currency = s.substr(0, s.indexOf(mainCurrency))
 
     pairMessage({
-      ask: parseFloat(a),
-      bid: parseFloat(b),
+      // ask: parseFloat(a),
+      bid: parseFloat(c),
       pair: [currency, mainCurrency],
     })
   })
