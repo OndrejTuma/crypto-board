@@ -79,6 +79,8 @@ const ExchangeContainer = (
     connection?.createSocket?.(currencies, mainCurrency)
     connection?.subscribeToCurrencies?.(currencies, mainCurrency)
     connection?.registerMessageHandler?.(updateCurrencyPairs, mainCurrency)
+
+    return () => connection?.closeSocket?.()
   }, [])
 
   return (

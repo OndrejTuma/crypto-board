@@ -89,29 +89,7 @@ Binance.prototype.registerMessageHandler = function (handler, mainCurrency) {
     const { a, b, c, s } = data
     const currency = s.substr(0, s.indexOf(mainCurrency))
 
-    handler({
-      // ask: parseFloat(a),
-      bid: parseFloat(c),
-      pair: [currency, mainCurrency],
-    })
-  })
-}
-Binance.prototype.subscribeToCurrencyPairs = function (pairMessage, mainCurrency) {
-  if (typeof pairMessage !== 'function') {
-    return
-  }
-
-  this.socket.addEventListener('message', function (e) {
-    const { data } = JSON.parse(e.data)
-
-    if (!data) {
-      return
-    }
-
-    const { a, b, c, s } = data
-    const currency = s.substr(0, s.indexOf(mainCurrency))
-
-    pairMessage({
+    handler?.({
       // ask: parseFloat(a),
       bid: parseFloat(c),
       pair: [currency, mainCurrency],

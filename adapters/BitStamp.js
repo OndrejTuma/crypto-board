@@ -4,12 +4,14 @@ import getOr from 'lodash/fp/getOr'
 
 import fetchRequest from '../utils/fetchRequest'
 import generateId from '../utils/generateId'
+import Binance from './Binance'
 
 function BitStamp(apiKey, secretKey) {
   this.apiKey = apiKey
   this.secretKey = secretKey
   this.url = 'https://www.bitstamp.net/api/v2'
   this.websocketUrl = 'wss://ws.bitstamp.net'
+  this.websocketOpened = false
 }
 
 BitStamp.prototype._getNonce = function () {
@@ -20,9 +22,17 @@ BitStamp.prototype._getSignature = function (nonce, url, method, timestamp) {
   const stringToSign = `BITSTAMP ${this.apiKey}${method}${standardUrl.hostname}${standardUrl.pathname}${standardUrl.search}${nonce}${timestamp}v2`
   return HmacSHA256(stringToSign, this.secretKey).toString(Hex).toUpperCase()
 }
-BitStamp.prototype._subscribeToChannel = function (channel) {
-  this.socket.send(JSON.stringify({
+BitStamp.prototype._subscribe = function (channel) {
+  this.socket?.send?.(JSON.stringify({
     event: 'bts:subscribe',
+    data: {
+      channel,
+    },
+  }))
+}
+BitStamp.prototype._unsubscribe = function (channel) {
+  this.socket?.send?.(JSON.stringify({
+    event: 'bts:unsubscribe',
     data: {
       channel,
     },
@@ -36,38 +46,62 @@ BitStamp.prototype._parseCurrencyPair = function (pair, mainCurrency) {
 }
 
 
-BitStamp.prototype.closeSocketForCurrencyPairs = function () {
+BitStamp.prototype.closeSocket = function () {
   this.socket?.close()
 }
-BitStamp.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
-  this.closeSocketForCurrencyPairs()
+BitStamp.prototype.createSocket = function () {
+  this.closeSocket()
 
   this.socket = new WebSocket(this.websocketUrl)
 
   this.socket.addEventListener('open', () => {
-    currencies.forEach(currency => this._subscribeToChannel(`order_book_${this._getCurrencyPair(currency, mainCurrency)}`))
+    this.websocketOpened = true
   })
 
   return this.socket
 }
-BitStamp.prototype.subscribeToCurrencyPairs = function (pairMessage, mainCurrency) {
-  if (typeof pairMessage !== 'function') {
-    return
-  }
+BitStamp.prototype.subscribeToCurrencies = function (currencies, mainCurrency) {
+  currencies.forEach(currency => this.subscribeToCurrency(currency, mainCurrency))
+}
+BitStamp.prototype.subscribeToCurrency = function (currency, mainCurrency) {
+  const channel = `live_trades_${this._getCurrencyPair(currency, mainCurrency)}`
 
+  if (this.websocketOpened) {
+    this._subscribe(channel)
+  } else {
+    this.socket.addEventListener('open', () => {
+      this._subscribe(channel)
+    })
+  }
+}
+BitStamp.prototype.unsubscribeFromCurrencies = function (currencies, mainCurrency) {
+  currencies.forEach(currency => this.unsubscribeFromCurrency(currency, mainCurrency))
+}
+BitStamp.prototype.unsubscribeFromCurrency = function (currency, mainCurrency) {
+  const channel = `live_trades_${this._getCurrencyPair(currency, mainCurrency)}`
+
+  if (this.websocketOpened) {
+    this._unsubscribe(channel)
+  } else {
+    this.socket.addEventListener('open', () => {
+      this._unsubscribe(channel)
+    })
+  }
+}
+BitStamp.prototype.registerMessageHandler = function (handler, mainCurrency) {
   this.socket.addEventListener('message', e => {
     const { channel, data, event } = JSON.parse(e.data)
 
-    if (event !== 'data') {
+    if (event !== 'trade') {
       return
     }
 
     const pair = this._parseCurrencyPair(channel.split('_').pop(), mainCurrency)
-    const ask = getOr(0, 'asks[0][0]')(data)
-    const bid = getOr(0, 'bids[0][0]')(data)
+    // const ask = getOr(0, 'asks[0][0]')(data)
+    const bid = getOr(0, 'price')(data)
 
-    pairMessage({
-      ask: parseFloat(ask),
+    handler?.({
+      // ask: parseFloat(ask),
       bid: parseFloat(bid),
       pair,
     })
