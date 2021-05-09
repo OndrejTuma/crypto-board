@@ -14,7 +14,16 @@ import CurrenciesSelectorContainer from './CurrenciesSelectorContainer'
 import CountryContext from '../../../contexts/CountryContext'
 
 
-const ExchangeContainer = ({ afterTotalValueChange, connection, country, currencies: defaultCurrencies, mainCurrency, name }) => {
+const ExchangeContainer = (
+  {
+    afterTotalValueChange,
+    connection,
+    country,
+    currencies: defaultCurrencies,
+    mainCurrency,
+    name,
+  },
+) => {
   const [mainCurrencyBalance, setMainCurrencyBalance] = useState(0)
   const [balances, setBalances] = useState([])
   const currencySelector = useCurrencies(name, defaultCurrencies)
@@ -35,11 +44,14 @@ const ExchangeContainer = ({ afterTotalValueChange, connection, country, currenc
       ]
     })
   }, [])
-  const beforeCurrencyAddHandler = currency => setCurrencyPairs(pairs => ([
-    ...pairs,
-    { pair: [currency, mainCurrency] },
-  ]))
-  const beforeCurrencyDeleteHandler = currency => setCurrencyPairs(pairs => pairs.filter(({ pair }) => pair[0] !== currency))
+  const beforeCurrencyAddHandler = currency => {
+    setCurrencyPairs(pairs => ([...pairs, { pair: [currency, mainCurrency] }]))
+    connection?.subscribeToCurrency?.(currency, mainCurrency)
+  }
+  const beforeCurrencyDeleteHandler = currency => {
+    setCurrencyPairs(pairs => pairs.filter(({ pair }) => pair[0] !== currency))
+    connection?.unsubscribeFromCurrency?.(currency, mainCurrency)
+  }
 
   useEffect(() => {
     // getting balances to defined currencies
@@ -50,16 +62,6 @@ const ExchangeContainer = ({ afterTotalValueChange, connection, country, currenc
 
       setMainCurrencyBalance(mainBalance)
     })
-
-    // Using websockets rather than rest api for currency pairs
-    // connection.getCurrencyPairs(currencies, mainCurrency).then(res => setCurrencyPairs(res))
-    connection?.createSocketForCurrencyPairs?.(currencies, mainCurrency)
-    connection?.subscribeToCurrencyPairs?.(updateCurrencyPairs, mainCurrency)
-
-    // TODO: nahradit beforeAdd a beforeDelete updatem currency pairs zde
-    // setCurrencyPairs(pairs => {
-    //   const filteredPairs = pairs.filter(({pair}) => )
-    // })
   }, [currencies])
   useEffect(() => {
     if (balances.length === 0 || !currencyPairs) {
@@ -71,6 +73,15 @@ const ExchangeContainer = ({ afterTotalValueChange, connection, country, currenc
   useEffect(() => {
     afterTotalValueChange?.(total + mainCurrencyBalance, country)
   }, [total, mainCurrencyBalance])
+  useEffect(() => {
+    // Using websockets rather than rest api for currency pairs
+    // connection.getCurrencyPairs(currencies, mainCurrency).then(res => setCurrencyPairs(res))
+    connection?.createSocket?.(currencies, mainCurrency)
+    connection?.subscribeToCurrencies?.(currencies, mainCurrency)
+    connection?.registerMessageHandler?.(updateCurrencyPairs, mainCurrency)
+
+    return () => connection?.closeSocket?.()
+  }, [])
 
   return (
     <CountryContext.Provider value={country}>

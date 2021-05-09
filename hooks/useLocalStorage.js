@@ -1,14 +1,22 @@
 import { useState, useEffect } from 'react'
 
+function getDefaultValue(key, defaultValue) {
+  if (typeof window === 'undefined') {
+    return defaultValue
+  }
+
+  const value = localStorage.getItem(key)
+
+  return value ? JSON.parse(value) : defaultValue
+}
+
 const useLocalStorage = (key, defaultValue) => {
-  const [value, set] = useState(defaultValue)
+  const [value, set] = useState(getDefaultValue(key, defaultValue))
 
   useEffect(() => {
     const value = localStorage.getItem(key)
 
-    if (value) {
-      set(JSON.parse(value))
-    } else {
+    if (!value) {
       localStorage.setItem(key, JSON.stringify(defaultValue))
     }
   }, [])

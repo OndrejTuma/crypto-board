@@ -3,7 +3,6 @@ import Hex from 'crypto-js/enc-hex'
 import getOr from 'lodash/fp/getOr'
 
 import fetchRequest from '../utils/fetchRequest'
-import BitStamp from './BitStamp'
 
 function CoinMate(publicKey, privateKey, clientId) {
   this.publicKey = publicKey
@@ -11,6 +10,7 @@ function CoinMate(publicKey, privateKey, clientId) {
   this.clientId = parseInt(clientId)
   this.url = 'https://coinmate.io/api'
   this.websocketUrl = 'wss://coinmate.io/api/websocket'
+  this.websocketOpened = false
 }
 
 
@@ -20,7 +20,7 @@ CoinMate.prototype._getNonce = function () {
 CoinMate.prototype._getSignature = function (nonce) {
   return HmacSHA256(`${nonce}${this.clientId}${this.publicKey}`, this.privateKey).toString(Hex).toUpperCase()
 }
-CoinMate.prototype._subscribeToChannel = function (channel) {
+CoinMate.prototype._subscribe = function (channel) {
   const nonce = this._getNonce()
   const signature = this._getSignature(nonce)
 
@@ -35,23 +35,66 @@ CoinMate.prototype._subscribeToChannel = function (channel) {
     },
   }))
 }
+CoinMate.prototype._unsubscribe = function (channel) {
+  const nonce = this._getNonce()
+  const signature = this._getSignature(nonce)
+
+  this.socket.send(JSON.stringify({
+    event: 'unsubscribe',
+    data: {
+      channel: channel,
+      clientId: this.clientId,
+      publicKey: this.publicKey,
+      signature,
+      nonce,
+    },
+  }))
+}
 
 
-CoinMate.prototype.closeSocketForCurrencyPairs = function () {
+CoinMate.prototype.closeSocket = function () {
   this.socket?.close()
 }
-CoinMate.prototype.createSocketForCurrencyPairs = function (currencies, mainCurrency) {
-  this.closeSocketForCurrencyPairs()
+CoinMate.prototype.createSocket = function (currencies, mainCurrency) {
+  this.closeSocket()
 
   this.socket = new WebSocket(this.websocketUrl)
 
   this.socket.addEventListener('open', () => {
-    currencies.forEach(currency => this._subscribeToChannel(`order_book-${currency}_${mainCurrency}`))
+    this.websocketOpened = true
   })
 
   return this.socket
 }
-CoinMate.prototype.subscribeToCurrencyPairs = function (pairMessage) {
+CoinMate.prototype.subscribeToCurrencies = function (currencies, mainCurrency) {
+  currencies.forEach(currency => this.subscribeToCurrency(currency, mainCurrency))
+}
+CoinMate.prototype.subscribeToCurrency = function (currency, mainCurrency) {
+  const channel = `order_book-${currency}_${mainCurrency}`
+
+  if (this.websocketOpened) {
+    this._subscribe(channel)
+  } else {
+    this.socket.addEventListener('open', () => {
+      this._subscribe(channel)
+    })
+  }
+}
+CoinMate.prototype.unsubscribeFromCurrencies = function (currencies, mainCurrency) {
+  currencies.forEach(currency => this.unsubscribeFromCurrency(currency, mainCurrency))
+}
+CoinMate.prototype.unsubscribeFromCurrency = function (currency, mainCurrency) {
+  const channel = `order_book-${currency}_${mainCurrency}`
+
+  if (this.websocketOpened) {
+    this._unsubscribe(channel)
+  } else {
+    this.socket.addEventListener('open', () => {
+      this._unsubscribe(channel)
+    })
+  }
+}
+CoinMate.prototype.registerMessageHandler = function (pairMessage) {
   if (typeof pairMessage !== 'function') {
     return
   }
