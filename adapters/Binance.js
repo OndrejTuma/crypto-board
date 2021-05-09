@@ -7,9 +7,9 @@ function Binance(apiKey, secretKey) {
   this.apiKey = apiKey
   this.secretKey = secretKey
   this.url = 'https://api.binance.com'
-  // this.websocketUrl = 'wss://fstream.binance.com' // not working properly :(
   this.websocketUrl = 'wss://stream.binance.com:9443'
   this.websocketOpened = false
+  // TODO: create Socket prototype for serving comunication
 }
 
 
