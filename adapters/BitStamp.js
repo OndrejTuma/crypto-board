@@ -4,7 +4,6 @@ import getOr from 'lodash/fp/getOr'
 
 import fetchRequest from '../utils/fetchRequest'
 import generateId from '../utils/generateId'
-import Binance from './Binance'
 
 function BitStamp(apiKey, secretKey) {
   this.apiKey = apiKey
