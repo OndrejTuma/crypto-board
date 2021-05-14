@@ -33,8 +33,6 @@ function MyApp({ Component, pageProps }) {
     logOut,
   }
 
-  console.count('APP')
-
   return (
     <AuthContext.Provider value={authProviderValue}>
       <Component {...pageProps} />

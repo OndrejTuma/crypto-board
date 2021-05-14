@@ -1,6 +1,7 @@
 import HmacSHA256 from 'crypto-js/hmac-sha256'
 import Hex from 'crypto-js/enc-hex'
 
+import Socket from '../prototypes/Socket'
 import fetchRequest from '../utils/fetchRequest'
 
 function Binance(apiKey, secretKey) {
@@ -8,8 +9,6 @@ function Binance(apiKey, secretKey) {
   this.secretKey = secretKey
   this.url = 'https://api.binance.com'
   this.websocketUrl = 'wss://stream.binance.com:9443'
-  this.websocketOpened = false
-  // TODO: create Socket prototype for serving comunication
 }
 
 
@@ -21,31 +20,26 @@ Binance.prototype._getSignature = function (queryString = '', requestBody = '') 
 }
 
 
-Binance.prototype.closeSocket = function () {
-  this.socket?.close?.()
-}
 Binance.prototype.createSocket = function (currencies, mainCurrency) {
-  this.closeSocket()
+  if (this.socket) {
+    this.socket.close()
+  }
 
   const params = currencies.map(currency => `${currency.toLowerCase()}${mainCurrency.toLowerCase()}@ticker`)
-
   const socketUrl = `${this.websocketUrl}/stream?streams=${params.join('/')}`
-  this.socket = new WebSocket(socketUrl)
 
-  this.socket.addEventListener('open', () => {
-    this.websocketOpened = true
-  })
+  this.socket = new Socket(socketUrl)
+
+  this.socket.open()
 }
 Binance.prototype.subscribeToCurrencies = function (currencies, mainCurrency) {
   const params = currencies.map(currency => `${currency.toLowerCase()}${mainCurrency.toLowerCase()}@ticker`)
 
-  if (this.websocketOpened) {
-    this._subscribe(params)
-  } else {
-    this.socket.addEventListener('open', () => {
-      this._subscribe(params)
-    })
-  }
+  this.socket.send({
+    method: 'SUBSCRIBE',
+    params,
+    id: 1,
+  })
 }
 Binance.prototype.subscribeToCurrency = function (currency, mainCurrency) {
   this.subscribeToCurrencies([currency], mainCurrency)
@@ -53,33 +47,17 @@ Binance.prototype.subscribeToCurrency = function (currency, mainCurrency) {
 Binance.prototype.unsubscribeFromCurrencies = function (currencies, mainCurrency) {
   const params = currencies.map(currency => `${currency.toLowerCase()}${mainCurrency.toLowerCase()}@ticker`)
 
-  if (this.websocketOpened) {
-    this._unsubscribe(params)
-  } else {
-    this.socket.addEventListener('open', () => {
-      this._unsubscribe(params)
-    })
-  }
+  this.socket.send({
+    method: 'UNSUBSCRIBE',
+    params,
+    id: 1,
+  })
 }
 Binance.prototype.unsubscribeFromCurrency = function (currency, mainCurrency) {
   this.unsubscribeFromCurrencies([currency], mainCurrency)
 }
-Binance.prototype._subscribe = function (params) {
-  this.socket?.send?.(JSON.stringify({
-    method: 'SUBSCRIBE',
-    params,
-    id: 1,
-  }))
-}
-Binance.prototype._unsubscribe = function (params) {
-  this.socket?.send?.(JSON.stringify({
-    method: 'UNSUBSCRIBE',
-    params,
-    id: 1,
-  }))
-}
 Binance.prototype.registerMessageHandler = function (handler, mainCurrency) {
-  this.socket.addEventListener('message', function (e) {
+  this.socket.message(function (e) {
     const { data } = JSON.parse(e.data)
 
     if (!data) {
@@ -97,13 +75,13 @@ Binance.prototype.registerMessageHandler = function (handler, mainCurrency) {
   })
 }
 
-Binance.prototype.getBalances = async function (currencies) {
+Binance.prototype.getBalances = function (currencies) {
   const request = new Request('/api/binance/balances', {
     method: 'POST',
     body: JSON.stringify(currencies),
   })
 
-  return await fetchRequest(request)
+  return fetchRequest(request)
 }
 Binance.prototype.fetchBalances = async function (currencies) {
   const queryString = `timestamp=${this._getTimestamp()}`

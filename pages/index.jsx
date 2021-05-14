@@ -21,8 +21,6 @@ function Home({ binanceConnectionInfo, bitstampConnectionInfo, coinmateConnectio
   const { apiKey, secretKey } = bitstampConnectionInfo
   const { apiKey: bApiKey, secretKey: bSecretKey } = binanceConnectionInfo
 
-  console.count('DAMNIT')
-
   useEffect(() => {
     setConnections({
       coinmate: new CoinMate(publicKey, privateKey, clientId),
