@@ -2,6 +2,7 @@ import HmacSHA256 from 'crypto-js/hmac-sha256'
 import Hex from 'crypto-js/enc-hex'
 import getOr from 'lodash/fp/getOr'
 
+import Socket from '../prototypes/Socket'
 import fetchRequest from '../utils/fetchRequest'
 
 function CoinMate(publicKey, privateKey, clientId) {
@@ -9,8 +10,8 @@ function CoinMate(publicKey, privateKey, clientId) {
   this.privateKey = privateKey
   this.clientId = parseInt(clientId)
   this.url = 'https://coinmate.io/api'
-  this.websocketUrl = 'wss://coinmate.io/api/websocket'
-  this.websocketOpened = false
+
+  this.socket = new Socket('wss://coinmate.io/api/websocket')
 }
 
 
@@ -20,11 +21,21 @@ CoinMate.prototype._getNonce = function () {
 CoinMate.prototype._getSignature = function (nonce) {
   return HmacSHA256(`${nonce}${this.clientId}${this.publicKey}`, this.privateKey).toString(Hex).toUpperCase()
 }
-CoinMate.prototype._subscribe = function (channel) {
+
+
+CoinMate.prototype.createSocket = function () {
+  this.socket.close()
+  this.socket.open()
+}
+CoinMate.prototype.subscribeToCurrencies = function (currencies, mainCurrency) {
+  currencies.forEach(currency => this.subscribeToCurrency(currency, mainCurrency))
+}
+CoinMate.prototype.subscribeToCurrency = function (currency, mainCurrency) {
+  const channel = `order_book-${currency}_${mainCurrency}`
   const nonce = this._getNonce()
   const signature = this._getSignature(nonce)
 
-  this.socket.send(JSON.stringify({
+  this.socket.send({
     event: 'subscribe',
     data: {
       channel: channel,
@@ -33,13 +44,17 @@ CoinMate.prototype._subscribe = function (channel) {
       signature,
       nonce,
     },
-  }))
+  })
 }
-CoinMate.prototype._unsubscribe = function (channel) {
+CoinMate.prototype.unsubscribeFromCurrencies = function (currencies, mainCurrency) {
+  currencies.forEach(currency => this.unsubscribeFromCurrency(currency, mainCurrency))
+}
+CoinMate.prototype.unsubscribeFromCurrency = function (currency, mainCurrency) {
+  const channel = `order_book-${currency}_${mainCurrency}`
   const nonce = this._getNonce()
   const signature = this._getSignature(nonce)
 
-  this.socket.send(JSON.stringify({
+  this.socket.send({
     event: 'unsubscribe',
     data: {
       channel: channel,
@@ -48,58 +63,10 @@ CoinMate.prototype._unsubscribe = function (channel) {
       signature,
       nonce,
     },
-  }))
-}
-
-
-CoinMate.prototype.closeSocket = function () {
-  this.socket?.close()
-}
-CoinMate.prototype.createSocket = function (currencies, mainCurrency) {
-  this.closeSocket()
-
-  this.socket = new WebSocket(this.websocketUrl)
-
-  this.socket.addEventListener('open', () => {
-    this.websocketOpened = true
   })
-
-  return this.socket
-}
-CoinMate.prototype.subscribeToCurrencies = function (currencies, mainCurrency) {
-  currencies.forEach(currency => this.subscribeToCurrency(currency, mainCurrency))
-}
-CoinMate.prototype.subscribeToCurrency = function (currency, mainCurrency) {
-  const channel = `order_book-${currency}_${mainCurrency}`
-
-  if (this.websocketOpened) {
-    this._subscribe(channel)
-  } else {
-    this.socket.addEventListener('open', () => {
-      this._subscribe(channel)
-    })
-  }
-}
-CoinMate.prototype.unsubscribeFromCurrencies = function (currencies, mainCurrency) {
-  currencies.forEach(currency => this.unsubscribeFromCurrency(currency, mainCurrency))
-}
-CoinMate.prototype.unsubscribeFromCurrency = function (currency, mainCurrency) {
-  const channel = `order_book-${currency}_${mainCurrency}`
-
-  if (this.websocketOpened) {
-    this._unsubscribe(channel)
-  } else {
-    this.socket.addEventListener('open', () => {
-      this._unsubscribe(channel)
-    })
-  }
 }
 CoinMate.prototype.registerMessageHandler = function (pairMessage) {
-  if (typeof pairMessage !== 'function') {
-    return
-  }
-
-  this.socket.addEventListener('message', function (e) {
+  this.socket.message(function (e) {
     const { channel, event, payload } = JSON.parse(e.data)
 
     if (event !== 'data') {
@@ -116,12 +83,10 @@ CoinMate.prototype.registerMessageHandler = function (pairMessage) {
     const asks = getOr([], 'asks')(payload)
 
     const pair = currencyPair.split('_')
-    // const bid = bids.reduce((acc, { price }) => acc + price, 0) / bids.length
-    // const ask = asks.reduce((acc, { price }) => acc + price, 0) / asks.length
     const ask = getOr(0, '[0].price')(asks)
     const bid = getOr(0, '[0].price')(bids)
 
-    pairMessage({
+    pairMessage?.({
       ask,
       bid,
       pair,
